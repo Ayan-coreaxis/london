@@ -1,0 +1,68 @@
+/*
+ * fonts.css
+ * Local fonts for London InstantPrint website.
+ * Yeh file resources/css/fonts.css mein rakho
+ * aur app.css mein @import karo ya layout blade mein link karo.
+ *
+ * Font path: /fonts/ (public/fonts/ folder)
+ */
+
+/* ── ABCGravity — Headings (h1, h2, h3, h4, h5, h6, .font-heading) ── */
+@font-face {
+    font-family: 'ABCGravity';
+    src: url('/fonts/ABCGravity-NormalItalic-Trial.otf') format('opentype');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Normal weight alias (so heading usage works without specifying italic) */
+@font-face {
+    font-family: 'ABCGravity';
+    src: url('/fonts/ABCGravity-NormalItalic-Trial.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ── Apply fonts globally ── */
+
+/* Headings use ABCGravity */
+h1, h2, h3, h4, h5, h6,
+.font-heading,
+.hero-title,
+.section-title,
+.product-title,
+.card-title {
+    font-family: 'ABCGravity', 'Montserrat', sans-serif;
+}
+
+/* Body text uses system sans-serif (BrittiSans fallback if available) */
+body,
+p,
+span,
+li,
+a,
+input,
+button,
+textarea,
+select,
+.font-body {
+    font-family: 'BrittiSans', 'Open Sans', 'Inter', sans-serif;
+    font-size: 15px;
+}
+
+/*
+ * NOTE: Agar BrittiSans bhi locally available ho toh yahan add karo:
+ *
+ * @font-face {
+ *     font-family: 'BrittiSans';
+ *     src: url('/fonts/BrittiSans-Regular.woff2') format('woff2'),
+ *          url('/fonts/BrittiSans-Regular.woff') format('woff');
+ *     font-weight: normal;
+ *     font-style: normal;
+ *     font-display: swap;
+ * }
+ *
+ * Aur font file public/fonts/ mein rakh do.
+ */

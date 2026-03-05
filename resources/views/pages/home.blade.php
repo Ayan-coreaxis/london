@@ -12,14 +12,15 @@
 --}}
 <section class="hero" data-aos="fade-up" data-aos-duration="750">
     <div class="hero-left">
-        <h1>Bound to<br>Impress</h1>
-        <p>From everyday booklets to high-end brochures we have got you covered</p>
-        <a href="{{ route('products') }}" class="btn-shop-now">Shop Now</a>
+        <h1>{{ $settings['hero_title_line1'] ?? 'Bound to' }}<br>{{ $settings['hero_title_line2'] ?? 'Impress' }}</h1>
+        <p>{{ $settings['hero_subtitle'] ?? 'From everyday booklets to high-end brochures we have got you covered' }}</p>
+        <a href="{{ route('products') }}" class="btn-shop-now">{{ $settings['hero_btn_text'] ?? 'Shop Now' }}</a>
     </div>
 
     <div class="hero-right">
 
-        {{-- Navy scalloped SVG — right edge ke bumps navy se pink mein jaate hain --}}
+        {{-- Scalloped wave SVG — left panel color se right panel mein transition --}}
+        @php $waveColor = $settings['color_hero_left'] ?? '#81C071'; @endphp
         <svg class="hero-wave-svg"
              viewBox="0 0 60 400"
              preserveAspectRatio="none"
@@ -33,7 +34,7 @@
                 C15,300 65,325 40,350
                 C15,375 40,400 40,400
                 L0,400 Z
-            " fill="#1e3a6e"/>
+            " fill="{{ $waveColor }}"/>
         </svg>
 
         <div class="hero-right-content">
@@ -59,45 +60,28 @@
 <div class="trust-strip">
     <div class="trust-item" data-aos="fade-up" data-aos-delay="0" data-aos-duration="500">
         <div class="trust-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-                <path d="M16 11l2 2 4-4" stroke-width="2"/>
-            </svg>
+            <img src="{{ asset('images/icon2.png') }}" alt="" srcset="" width='50'>
         </div>
         <div class="trust-label">Dedicated Account<br>Managers</div>
     </div>
 
     <div class="trust-item" data-aos="fade-up" data-aos-delay="80" data-aos-duration="500">
         <div class="trust-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <rect x="1" y="3" width="15" height="13" rx="2"/>
-                <path d="M16 8h4l3 3v5h-7V8z"/>
-                <circle cx="5.5" cy="18.5" r="2.5"/>
-                <circle cx="18.5" cy="18.5" r="2.5"/>
-            </svg>
+           <img src="{{ asset('images/icon1.png') }}" alt="" srcset="" width='50'>
         </div>
         <div class="trust-label">Free Next Day<br>Delivery</div>
     </div>
 
     <div class="trust-item" data-aos="fade-up" data-aos-delay="160" data-aos-duration="500">
         <div class="trust-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <polyline points="9 11 12 14 22 4"/>
-                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-            </svg>
+            <img src="{{ asset('images/icon3.png') }}" alt="" srcset="" width='50'>
         </div>
         <div class="trust-label">Free 30 Point<br>Artwork Check</div>
     </div>
 
     <div class="trust-item" data-aos="fade-up" data-aos-delay="240" data-aos-duration="500">
         <div class="trust-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                <path d="M16 3.13a4 4 0 010 7.75"/>
-            </svg>
+             <img src="{{ asset('images/icon4.png') }}" alt="" srcset="" width='50'>
         </div>
         <div class="trust-label">Trade<br>Customers Only</div>
     </div>
@@ -118,7 +102,7 @@
             </div>
         </div>
         <div class="tp-excellent">Excellent</div>
-        <div class="tp-count">Based on 10,814 reviews</div>
+        <div class="tp-count">Based on {{ $settings['trustpilot_reviews'] ?? '10,814' }} reviews</div>
     </div>
 </div>
 
@@ -145,6 +129,9 @@
                 </div>
                 <div class="product-info">
                     <h3>{{ $product['name'] }}</h3>
+                    @if(!empty($product['base_price']))
+                    <span style="font-size:12px;color:#888;display:block;margin-bottom:3px">From £{{ number_format($product['base_price'],2) }}</span>
+                    @endif
                     <span class="order-now-link">Order now ›</span>
                 </div>
             </a>
@@ -224,6 +211,6 @@
     </div>
 </section>
 
-<section class="bottom"></section>
+
 
 @endsection

@@ -2,23 +2,51 @@
    London InstantPrint — Main Stylesheet
    ============================================ */
 
-/*
+/* ── ABC Gravity Variable Font (supports weight 100–900) ── */
 @font-face {
-    font-family: 'Britti Sans Trial';
-    src: url('/fonts/BrittiSansTrial-Regular.woff2') format('woff2');
-    font-weight: 400; font-style: normal;
+    font-family: 'ABCGravity';
+    src: url('/fonts/ABCGravityVariable-Trial.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
 }
 @font-face {
-    font-family: 'Britti Sans Trial';
-    src: url('/fonts/BrittiSansTrial-Bold.woff2') format('woff2');
-    font-weight: 700; font-style: normal;
+    font-family: 'ABCGravity';
+    src: url('/fonts/ABCGravityItalicVariable-Trial.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* ── Britti Sans — individual weights ── */
+@font-face {
+    font-family: 'BrittiSans';
+    src: url('/fonts/BrittiSansTrial-Light-BF6757bfd494951.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
 }
 @font-face {
-    font-family: 'Britti Sans Trial';
-    src: url('/fonts/BrittiSansTrial-Black.woff2') format('woff2');
-    font-weight: 900; font-style: normal;
+    font-family: 'BrittiSans';
+    src: url('/fonts/BrittiSansTrial-Regular-BF6757bfd47ffbf.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
 }
-*/
+@font-face {
+    font-family: 'BrittiSans';
+    src: url('/fonts/BrittiSansTrial-Semibold-BF6757bfd443a8a.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'BrittiSans';
+    src: url('/fonts/BrittiSansTrial-Bold-BF6757bfd4a96ed.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -28,8 +56,8 @@
   --navy: #1e3a6e;
   --white: #fff;
   --light-blue: #d9eef6;
-  --font: 'Britti Sans Trial', 'Montserrat', sans-serif;
-  --body: 'Britti Sans Trial', 'Open Sans', sans-serif;
+  --font: 'ABCGravity', sans-serif;
+  --body: 'BrittiSans', 'Open Sans', sans-serif;
 }
 
 html { scroll-behavior: smooth; }
@@ -59,9 +87,10 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
   gap: 1px;
 }
 .promo-main-text {
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 800;
+  font-family: 'ABCGravity', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 19px;
   color: #111;
 }
 .promo-sub-text {
@@ -252,7 +281,7 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
 
 /* LEFT — Navy */
 .hero-left {
-  background: var(--navy);
+  background: #81C071;
   padding: 60px 80px 60px 60px;
   display: flex;
   flex-direction: column;
@@ -261,9 +290,10 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
   z-index: 2;
 }
 .hero-left h1 {
-  font-family: var(--font);
-  font-size: 56px;
+  font-family: 'ABCGravity', sans-serif;
   font-weight: 900;
+  font-style: normal;
+  font-size: 56px;
   color: #fff;
   line-height: 1.0;
   margin-bottom: 16px;
@@ -297,7 +327,7 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
 
 /* RIGHT — Pink */
 .hero-right {
-  background: #f06aaa;
+  background: #fd6c99;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -416,7 +446,7 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
    FEATURED PRODUCTS
    =========================== */
 .featured-section {
-  background: var(--red);
+  background: #113F70;
   padding: 50px 24px 60px;
   text-align: center;
 }
@@ -512,8 +542,8 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
   background-position: cover;
   background-repeat: no-repeat;
   background-color: #000;
-  min-height: 450px;
-  width: 60%;
+  min-height: 650px;
+  width: 90%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -605,7 +635,7 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
    TRENDING
    =========================== */
 .trending-section {
-  background: var(--light-blue);
+  background: #CFF4FF;
   padding: 60px 40px 70px; text-align: center;
 }
 .trending-section h2 { font-family: var(--font); font-size: 32px; font-weight: 900; color: var(--navy); margin-bottom: 6px; }

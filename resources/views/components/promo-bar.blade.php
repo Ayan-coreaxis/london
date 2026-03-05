@@ -1,13 +1,21 @@
-{{-- resources/views/components/promo-bar.blade.php --}}
+{{-- Dynamic promo bar from site_settings --}}
+@php
+    try {
+        $promoEnabled = \App\Models\SiteSetting::get('promo_bar_enabled', '1');
+        $promoText    = \App\Models\SiteSetting::get('promo_bar_text', '🎉 Free Next Day Delivery on ALL orders! Trade customers only.');
+    } catch (\Exception $e) {
+        $promoEnabled = '1';
+        $promoText    = '🎉 Free Next Day Delivery on ALL orders! Trade customers only.';
+    }
+@endphp
+@if($promoEnabled === '1')
 <div class="promo-bar">
     <div class="promo-bar-inner">
         <div class="promo-left"></div>
         <div class="promo-center">
-            <span class="promo-main-text">10% off your first order.*</span>
-            <span class="promo-sub-text">*T&amp;Cs apply.</span>
+            <span class="promo-main-text">{{ $promoText }}</span>
         </div>
-        <div class="promo-right">
-            <button class="promo-code-btn" title="Click to copy code">USE CODE: WELCOME10</button>
-        </div>
+        <div class="promo-right"></div>
     </div>
 </div>
+@endif
