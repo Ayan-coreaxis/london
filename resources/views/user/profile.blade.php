@@ -79,6 +79,8 @@
     <div class="account-nav">
         <a href="{{ route('user.dashboard') }}">My Orders</a>
         <a href="{{ route('user.profile') }}" class="active">My Profile</a>
+        <a href="{{ route('user.addresses') }}">Addresses</a>
+        <a href="{{ route('user.wishlist') }}">Wishlist</a>
     </div>
 
     @if(session('success'))
@@ -159,6 +161,45 @@
                 </div>
             </div>
             <button type="submit" class="btn-save">Change Password</button>
+        </form>
+    </div>
+
+    {{-- Profile Picture --}}
+    <div class="profile-card">
+        <h3>Profile Picture</h3>
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px">
+            <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;background:#eef3ff;display:flex;align-items:center;justify-content:center;border:2px solid #e0e0e0;flex-shrink:0">
+                @if($user->avatar ?? false)
+                    <img src="{{ asset($user->avatar) }}" style="width:100%;height:100%;object-fit:cover">
+                @else
+                    <span style="font-size:28px;color:#1e3a6e;font-weight:800;font-family:'Montserrat',sans-serif">{{ strtoupper(substr($user->name,0,1)) }}</span>
+                @endif
+            </div>
+            <form method="POST" action="{{ route('user.profile.avatar') }}" enctype="multipart/form-data" style="display:flex;gap:10px;align-items:end">
+                @csrf
+                <input type="file" name="avatar" accept="image/*" required style="font-size:13px">
+                <button type="submit" class="btn-save" style="padding:9px 18px;font-size:13px">Upload</button>
+            </form>
+        </div>
+    </div>
+
+    {{-- Notification Preferences --}}
+    <div class="profile-card">
+        <h3>Notification Preferences</h3>
+        <form method="POST" action="{{ route('user.profile.notifications') }}">
+            @csrf
+            @method('PUT')
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:#444">
+                    <input type="checkbox" name="email_notifications" value="1" {{ ($user->email_notifications ?? true) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#1e3a6e">
+                    Email notifications (order updates, promotions)
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:#444">
+                    <input type="checkbox" name="sms_notifications" value="1" {{ ($user->sms_notifications ?? false) ? 'checked' : '' }} style="width:18px;height:18px;accent-color:#1e3a6e">
+                    SMS notifications (delivery updates)
+                </label>
+            </div>
+            <button type="submit" class="btn-save">Save Preferences</button>
         </form>
     </div>
 </div>

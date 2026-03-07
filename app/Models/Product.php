@@ -3,7 +3,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 class Product extends Model {
-    protected $fillable = ['name','slug','category','description','base_price','sku','image','status'];
+    protected $fillable = ['name','slug','category','description','base_price','sku','image1','image2','image3','image4','status','sort_order'];
     public function options()  { return $this->hasMany(ProductOption::class)->orderBy('sort_order'); }
     public function presets()  { return $this->hasMany(ProductPreset::class)->orderBy('sort_order'); }
     public function variants() { return $this->hasMany(ProductVariant::class)->orderBy('sort_order'); }

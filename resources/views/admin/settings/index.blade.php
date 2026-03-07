@@ -34,6 +34,8 @@
     <button type="button" class="stab" onclick="showTab('general')"><i class="fas fa-cog"></i> General</button>
     <button type="button" class="stab" onclick="showTab('seo')"><i class="fas fa-search"></i> SEO</button>
     <button type="button" class="stab" onclick="showTab('pages')"><i class="fas fa-file-alt"></i> Pages</button>
+    <button type="button" class="stab" onclick="showTab('payment')"><i class="fas fa-credit-card"></i> Payment</button>
+    <button type="button" class="stab" onclick="showTab('email')"><i class="fas fa-envelope"></i> Email</button>
 </div>
 
 {{-- ════════════════════════════════════ --}}
@@ -525,6 +527,108 @@
   </div>
 </div>
 
+</div>
+
+{{-- ════════════════════════════════════ --}}
+{{-- TAB: PAYMENT --}}
+{{-- ════════════════════════════════════ --}}
+<div class="settings-panel" id="tab-payment">
+@php $pay = collect($grouped['payment'] ?? [])->keyBy('key'); @endphp
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+  {{-- Payment Methods --}}
+  <div class="data-card">
+    <div class="data-card-hdr"><h3><i class="fas fa-credit-card" style="color:#1e3a6e;margin-right:6px"></i>Payment Methods</h3></div>
+    <div style="padding:20px">
+      <p style="font-size:12px;color:#888;margin-bottom:16px">Enable or disable payment methods shown on checkout page.</p>
+
+      <div class="form-group">
+        <label>Credit / Debit Card</label>
+        <select name="payment_card_enabled" class="form-control">
+          <option value="1" {{ ($pay['payment_card_enabled']->value ?? '1') == '1' ? 'selected' : '' }}>Enabled</option>
+          <option value="0" {{ ($pay['payment_card_enabled']->value ?? '1') == '0' ? 'selected' : '' }}>Disabled</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>PayPal</label>
+        <select name="payment_paypal_enabled" class="form-control">
+          <option value="1" {{ ($pay['payment_paypal_enabled']->value ?? '1') == '1' ? 'selected' : '' }}>Enabled</option>
+          <option value="0" {{ ($pay['payment_paypal_enabled']->value ?? '1') == '0' ? 'selected' : '' }}>Disabled</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Pay by Invoice (Trade)</label>
+        <select name="payment_invoice_enabled" class="form-control">
+          <option value="1" {{ ($pay['payment_invoice_enabled']->value ?? '1') == '1' ? 'selected' : '' }}>Enabled</option>
+          <option value="0" {{ ($pay['payment_invoice_enabled']->value ?? '1') == '0' ? 'selected' : '' }}>Disabled</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  {{-- PayPal Settings --}}
+  <div class="data-card">
+    <div class="data-card-hdr"><h3><i class="fab fa-paypal" style="color:#003087;margin-right:6px"></i>PayPal Configuration</h3></div>
+    <div style="padding:20px">
+      <div class="form-group">
+        <label>PayPal Mode</label>
+        <select name="paypal_mode" class="form-control">
+          <option value="sandbox" {{ ($pay['paypal_mode']->value ?? 'sandbox') == 'sandbox' ? 'selected' : '' }}>Sandbox (Testing)</option>
+          <option value="live" {{ ($pay['paypal_mode']->value ?? 'sandbox') == 'live' ? 'selected' : '' }}>Live (Production)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>PayPal Client ID</label>
+        <input type="text" name="paypal_client_id" class="form-control" value="{{ $pay['paypal_client_id']->value ?? '' }}" placeholder="Enter PayPal Client ID">
+      </div>
+
+      <div class="form-group">
+        <label>PayPal Secret</label>
+        <input type="password" name="paypal_secret" class="form-control" value="{{ $pay['paypal_secret']->value ?? '' }}" placeholder="Enter PayPal Secret">
+      </div>
+
+      <div class="form-group">
+        <label>PayPal Currency</label>
+        <input type="text" name="paypal_currency" class="form-control" value="{{ $pay['paypal_currency']->value ?? 'GBP' }}" placeholder="GBP">
+      </div>
+
+      <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:8px;padding:12px 16px;font-size:12px;color:#3730a3;margin-top:8px">
+        <strong>Note:</strong> Get your PayPal credentials from <a href="https://developer.paypal.com" target="_blank" style="color:#1e3a6e;font-weight:700">developer.paypal.com</a>. Use Sandbox mode for testing.
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+{{-- ════════════════════════════════════ --}}
+{{-- TAB: EMAIL --}}
+{{-- ════════════════════════════════════ --}}
+<div class="settings-panel" id="tab-email">
+@php $em = collect($grouped['email'] ?? [])->keyBy('key'); @endphp
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div class="data-card">
+    <div class="data-card-hdr"><h3><i class="fas fa-envelope" style="color:#1e3a6e;margin-right:6px"></i>Email Configuration</h3></div>
+    <div style="padding:20px">
+      <div class="form-group"><label>From Name</label><input type="text" name="email_from_name" class="form-control" value="{{ $em['email_from_name']->value ?? 'London InstantPrint' }}"></div>
+      <div class="form-group"><label>From Email</label><input type="email" name="email_from_address" class="form-control" value="{{ $em['email_from_address']->value ?? '' }}"></div>
+      <div class="form-group"><label>Reply-To Email</label><input type="email" name="email_reply_to" class="form-control" value="{{ $em['email_reply_to']->value ?? '' }}"></div>
+    </div>
+  </div>
+  <div class="data-card">
+    <div class="data-card-hdr"><h3><i class="fas fa-file-alt" style="color:#1e3a6e;margin-right:6px"></i>Email Templates</h3></div>
+    <div style="padding:20px">
+      <div class="form-group"><label>Order Confirmation — Subject</label><input type="text" name="email_order_confirm_subject" class="form-control" value="{{ $em['email_order_confirm_subject']->value ?? 'Order Confirmed' }}"><div style="font-size:10px;color:#aaa;margin-top:3px">Use @verbatim{{ order_ref }}@endverbatim for order reference</div></div>
+      <div class="form-group"><label>Order Confirmation — Header Text</label><input type="text" name="email_order_confirm_header" class="form-control" value="{{ $em['email_order_confirm_header']->value ?? 'Thank you for your order!' }}"></div>
+      <div class="form-group"><label>Order Confirmation — Footer Text</label><textarea name="email_order_confirm_footer" class="form-control" rows="2">{{ $em['email_order_confirm_footer']->value ?? '' }}</textarea></div>
+      <div class="form-group"><label>Status Update — Subject</label><input type="text" name="email_status_update_subject" class="form-control" value="{{ $em['email_status_update_subject']->value ?? 'Order Update' }}"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 {{-- SAVE BUTTON --}}

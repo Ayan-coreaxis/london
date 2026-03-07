@@ -32,4 +32,13 @@ class DashboardController extends Controller
             "revenueChart"
         ));
     }
+
+    public function activityLog()
+    {
+        $logs = [];
+        try {
+            $logs = DB::select("SELECT * FROM admin_activity_log ORDER BY created_at DESC LIMIT 200");
+        } catch (\Exception $e) {}
+        return view("admin.activity-log", compact("logs"));
+    }
 }

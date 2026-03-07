@@ -326,6 +326,30 @@ Soft Touch Lamination</textarea></div>
                 </div>
             </div>
 
+            {{-- Product Info Accordion Texts (editable per product) --}}
+            <div class="sec-card">
+                <div class="sec-head">Product Info Accordion</div>
+                <div class="sec-body">
+                    <p style="font-size:12px;color:#888;margin-bottom:12px">These texts appear in the accordion on the product page left side. Leave blank to use defaults.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Artwork Setup</label>
+                        <textarea name="artwork_setup_text" class="form-control" rows="2" placeholder="Default: Upload your print-ready artwork in PDF, AI, EPS...">{{ $isEdit ? ($product->artwork_setup_text ?? '') : '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Artwork Templates</label>
+                        <textarea name="artwork_templates_text" class="form-control" rows="2" placeholder="Default: Download our free artwork templates...">{{ $isEdit ? ($product->artwork_templates_text ?? '') : '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Technical Specification</label>
+                        <textarea name="technical_spec_text" class="form-control" rows="2" placeholder="Default: Standard size: 85mm × 55mm...">{{ $isEdit ? ($product->technical_spec_text ?? '') : '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Key Information</label>
+                        <textarea name="key_info_text" class="form-control" rows="2" placeholder="Default: All orders are checked by our 30-point artwork review team...">{{ $isEdit ? ($product->key_info_text ?? '') : '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
             {{-- FAQs --}}
             <div class="sec-card">
                 <div class="sec-head">

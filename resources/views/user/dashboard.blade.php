@@ -145,6 +145,13 @@
         </div>
     </div>
 
+    <div style="display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap">
+        <a href="{{ route('user.dashboard') }}" style="padding:9px 18px;background:#1e3a6e;color:#fff;border:1.5px solid #1e3a6e;border-radius:7px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;text-decoration:none">My Orders</a>
+        <a href="{{ route('user.profile') }}" style="padding:9px 18px;border:1.5px solid #e0e0e0;border-radius:7px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#555;text-decoration:none">My Profile</a>
+        <a href="{{ route('user.addresses') }}" style="padding:9px 18px;border:1.5px solid #e0e0e0;border-radius:7px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#555;text-decoration:none">Addresses</a>
+        <a href="{{ route('user.wishlist') }}" style="padding:9px 18px;border:1.5px solid #e0e0e0;border-radius:7px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#555;text-decoration:none">Wishlist</a>
+    </div>
+
     <div class="orders-card">
         <div class="orders-card-hdr">My Orders</div>
         @if(empty($orders))

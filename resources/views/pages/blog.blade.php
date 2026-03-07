@@ -38,7 +38,7 @@
   </div>
 
   {{-- Category filters --}}
-  @if($categories->count())
+  @if(isset($categories) && $categories->count())
   <div class="blog-cats">
     <a href="{{ route('blog') }}" class="blog-cat-btn {{ !request('category') ? 'active' : '' }}">All</a>
     @foreach($categories as $cat)

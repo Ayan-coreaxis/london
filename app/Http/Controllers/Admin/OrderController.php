@@ -36,7 +36,16 @@ class OrderController extends Controller
         $items   = DB::select("SELECT * FROM order_items WHERE order_id = ?", [$id]);
         $history = [];
         try { $history = DB::select("SELECT osh.*, a.name as admin_name FROM order_status_history osh LEFT JOIN admins a ON a.id=osh.admin_id WHERE osh.order_id=? ORDER BY osh.created_at DESC", [$id]); } catch(\Exception $e){}
-        return view("admin.orders.show", compact("order","items","history"));
+
+        // Load all artwork files
+        $artworkFiles = [];
+        try { $artworkFiles = DB::select("SELECT oa.*, oi.product_name FROM order_artwork oa LEFT JOIN order_items oi ON oi.id = oa.order_item_id WHERE oa.order_id = ? ORDER BY oa.created_at DESC", [$id]); } catch(\Exception $e){}
+
+        // Load order notes (all for admin)
+        $orderNotes = [];
+        try { $orderNotes = DB::select("SELECT * FROM order_notes WHERE order_id = ? ORDER BY created_at ASC", [$id]); } catch(\Exception $e){}
+
+        return view("admin.orders.show", compact("order","items","history","artworkFiles","orderNotes"));
     }
 
     public function updateStatus(Request $request, int $id)
@@ -63,6 +72,9 @@ class OrderController extends Controller
         } catch(\Exception $e){
             \Illuminate\Support\Facades\Log::error('Status email error: ' . $e->getMessage());
         }
+
+        // Log admin activity
+        try { \App\Helpers\AdminLog::log('updated_order_status', 'order', $id, "Status changed to {$request->status}"); } catch (\Exception $e) {}
 
         return back()->with("success","Order status updated to {$request->status}! Customer has been notified by email.");
     }

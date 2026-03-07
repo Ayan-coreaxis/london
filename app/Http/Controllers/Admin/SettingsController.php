@@ -41,6 +41,7 @@ class SettingsController extends Controller
                 ->update(['value' => $value ?? '', 'updated_at' => now()]);
         }
 
+        try { \App\Helpers\AdminLog::log('updated_settings', 'settings', null, 'Site settings updated'); } catch (\Exception $e) {}
         return back()->with('success', 'Settings saved! Changes are live on the website.');
     }
 

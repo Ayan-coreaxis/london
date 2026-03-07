@@ -563,14 +563,26 @@
                                     <a href="{{ asset($item['artwork_url']) }}" target="_blank" style="color:#2a7a2a;font-weight:700;margin-left:4px;">
                                         View File
                                     </a>
+                                    {{-- Replace artwork --}}
+                                    <form method="POST" action="{{ route('cart.artwork.upload', $item['cart_key']) }}" enctype="multipart/form-data" style="display:inline;margin-left:8px;">
+                                        @csrf
+                                        <label style="color:#1e3a6e;font-weight:700;cursor:pointer;font-size:12px;">
+                                            Replace
+                                            <input type="file" name="artwork_file" accept=".pdf,.jpg,.jpeg,.png,.ai,.eps,.tiff" style="display:none;" onchange="this.closest('form').submit();">
+                                        </label>
+                                    </form>
                                 </div>
                             @else
                                 <div class="artwork-badge artwork-badge-pending">
                                     <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                                     Artwork Pending —
-                                    <a href="{{ route('product.show', $item['product_slug']) }}" style="color:#c87600;font-weight:700;margin-left:4px;">
-                                        Upload Now
-                                    </a>
+                                    <form method="POST" action="{{ route('cart.artwork.upload', $item['cart_key']) }}" enctype="multipart/form-data" style="display:inline;margin-left:4px;">
+                                        @csrf
+                                        <label style="color:#c87600;font-weight:700;cursor:pointer;text-decoration:underline;">
+                                            Upload Now
+                                            <input type="file" name="artwork_file" accept=".pdf,.jpg,.jpeg,.png,.ai,.eps,.tiff" style="display:none;" onchange="this.closest('form').submit();">
+                                        </label>
+                                    </form>
                                 </div>
                             @endif
 

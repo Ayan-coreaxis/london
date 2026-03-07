@@ -432,45 +432,43 @@
 
         {{-- Accordion --}}
         <div class="pd-accordion">
+            @php
+                $accItems = [
+                    ['title' => 'Artwork Setup', 'body' => $product['artwork_setup_text'] ?? 'Upload your print-ready artwork in PDF, AI, EPS, or TIFF format. Ensure bleed and crop marks are included. Minimum resolution 300 DPI.'],
+                    ['title' => 'Artwork Templates', 'body' => $product['artwork_templates_text'] ?? 'Download our free artwork templates for accurate sizing. Templates are available in Adobe Illustrator, InDesign, and PDF formats.'],
+                    ['title' => 'Technical Specification', 'body' => $product['technical_spec_text'] ?? 'Standard size: 85mm × 55mm. Print area: 81mm × 51mm (with 2mm bleed on each side). Colour mode: CMYK. File format: PDF preferred.'],
+                    ['title' => 'Key Information', 'body' => $product['key_info_text'] ?? 'All orders are checked by our 30-point artwork review team before going to print. Proofs available on request. Trade customers only.'],
+                ];
+            @endphp
+            @foreach($accItems as $acc)
             <div class="pd-acc-item">
                 <button class="pd-acc-trigger" onclick="toggleAcc(this)">
-                    Artwork Setup <span class="acc-icon">+</span>
+                    {{ $acc['title'] }} <span class="acc-icon">+</span>
                 </button>
-                <div class="pd-acc-body">
-                    Upload your print-ready artwork in PDF, AI, EPS, or TIFF format. Ensure bleed and crop marks are included. Minimum resolution 300 DPI.
-                </div>
+                <div class="pd-acc-body">{{ $acc['body'] }}</div>
             </div>
-            <div class="pd-acc-item">
-                <button class="pd-acc-trigger" onclick="toggleAcc(this)">
-                    Artwork Templates <span class="acc-icon">+</span>
-                </button>
-                <div class="pd-acc-body">
-                    Download our free artwork templates for accurate sizing. Templates are available in Adobe Illustrator, InDesign, and PDF formats.
-                </div>
-            </div>
-            <div class="pd-acc-item">
-                <button class="pd-acc-trigger" onclick="toggleAcc(this)">
-                    Technical Specification <span class="acc-icon">+</span>
-                </button>
-                <div class="pd-acc-body">
-                    Standard size: 85mm × 55mm. Print area: 81mm × 51mm (with 2mm bleed on each side). Colour mode: CMYK. File format: PDF preferred.
-                </div>
-            </div>
-            <div class="pd-acc-item">
-                <button class="pd-acc-trigger" onclick="toggleAcc(this)">
-                    Key Information <span class="acc-icon">+</span>
-                </button>
-                <div class="pd-acc-body">
-                    All orders are checked by our 30-point artwork review team before going to print. Proofs available on request. Trade customers only.
-                </div>
-            </div>
+            @endforeach
         </div>
 
-        <a href="#" class="btn-quote">Request a Quote</a>
+        <a href="{{ route('contact') }}?product={{ urlencode($product['name']) }}&quote=1" class="btn-quote">Request a Quote</a>
     </div>
 
     {{-- RIGHT: Product Config --}}
     <div class="pd-right">
+
+        @if($errors->any())
+            <div style="background:#fff3f2;border:1px solid #fbc9c6;border-radius:8px;padding:13px 16px;font-size:14px;color:#c0392b;margin-bottom:20px;">
+                ⚠️ <strong>Error:</strong>
+                <ul style="margin:5px 0 0 20px;padding:0;">
+                    @foreach ($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        @if(session('error'))
+            <div style="background:#fff3f2;border:1px solid #fbc9c6;border-radius:8px;padding:13px 16px;font-size:14px;color:#c0392b;margin-bottom:20px;">⚠️ {{ session('error') }}</div>
+        @endif
 
         <h1 class="pd-title">{{ $product['name'] ?? 'Business Cards' }}</h1>
 
@@ -531,8 +529,44 @@
         </div>
         @endif
 
+        {{-- ═══ VARIATION-BASED PRICING ═══ --}}
+        @if(!empty($hasVariations))
+        <div id="variationSection">
+            <hr class="pd-divider">
+            @foreach($variationData['attributes'] as $attr)
+                @if($attr->visible && count($attr->values) > 0)
+                <div style="margin-bottom:14px">
+                    <span class="pd-option-label">{{ $attr->name }}</span>
+                    <select class="pd-select var-selector" data-attr-id="{{ $attr->id }}" onchange="updateVariationPrice()">
+                        @foreach($attr->values as $val)
+                            <option value="{{ $val->id }}">{{ $val->value }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+            @endforeach
+            <hr class="pd-divider">
+            <div id="varNoMatch" style="display:none;background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:12px 16px;font-size:13px;color:#92400e;margin-bottom:16px">⚠ This combination is not available.</div>
+            <div id="varPriceTable" style="margin-bottom:16px"></div>
+            <div id="varSummary" style="display:none;background:linear-gradient(135deg,#1e3a6e,#2d4a8e);border-radius:10px;padding:16px 20px;color:#fff;margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+                    <div>
+                        <div style="font-size:12px;opacity:.7;margin-bottom:4px">Your Selection</div>
+                        <div style="font-size:14px;font-weight:600" id="varSummaryText"></div>
+                        <div style="font-size:11px;opacity:.6;margin-top:4px" id="varSummarySpecs"></div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:28px;font-weight:800" id="varSummaryPrice"></div>
+                        <div style="font-size:12px;opacity:.7" id="varSummaryVat"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <hr class="pd-divider">
 
+        <div id="oldPricingSection" @if(!empty($hasVariations)) style="display:none" @endif>
         {{-- Quantity --}}
         <div class="pd-row">
             <span class="pd-row-label">Your quantity</span>
@@ -611,6 +645,7 @@
                 <span class="per-unit" id="perUnitPrice">£{{ number_format($product['base_price'], 2) }}</span>
             </div>
         </div>
+        </div> {{-- end oldPricingSection --}}
 
         {{-- CTAs --}}
         <div class="pd-cta-group">
@@ -620,6 +655,8 @@
                 @csrf
                 <input type="hidden" name="product_id" value="{{ $product['id'] }}">
                 <input type="hidden" name="price" id="hiddenPrice" value="{{ $product['base_price'] ?? 0 }}">
+                <input type="hidden" name="turnaround_price" id="hiddenTurnaroundPrice" value="0">
+                <input type="hidden" name="variation_price" id="hiddenVariationPrice" value="0">
                 <input type="hidden" name="quantity" id="hiddenQty" value="1">
                 <input type="hidden" name="options" id="hiddenOptions" value="">
                 {{-- Artwork file input — linked to upload UI --}}
@@ -660,7 +697,7 @@
                 <h2>Frequently asked questions</h2>
                 <p>Got a question? We might have answered it here. If not, feel free to get in touch with us, we're here to help!</p>
             </div>
-            <a href="#" class="btn-contact">Contact</a>
+            <a href="{{ route('contact') }}" class="btn-contact">Contact</a>
         </div>
         <div class="faq-body">
             <div class="faq-list" id="faqList">
@@ -932,11 +969,39 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close
 
 // ── Add to Basket: sync selected options + price + qty ──
 function syncHiddenFields() {
-    // Price
+    // Check if variation system is active
+    var varSection = document.getElementById('variationSection');
+    if (varSection && varSection.style.display !== 'none') {
+        // Variation mode — price and qty already set by variation JS
+        // Just sync options from variation selectors
+        var opts = {};
+        document.querySelectorAll('.var-selector').forEach(function(sel) {
+            var label = sel.closest('div').querySelector('.pd-option-label');
+            var key = label ? label.textContent.trim().replace(/\s+/g,'_').toLowerCase() : 'option';
+            opts[key] = sel.options[sel.selectedIndex].text;
+        });
+        document.getElementById('hiddenOptions').value = JSON.stringify(opts);
+        return;
+    }
+
+    // Old system — Price
     var priceEl = document.getElementById('subtotalValue') || document.getElementById('perUnitPrice');
     if (priceEl) {
         var priceText = priceEl.textContent.replace(/[^0-9.]/g, '');
         document.getElementById('hiddenPrice').value = priceText || 0;
+    }
+    // Turnaround price for server-side verification
+    if (typeof TURNAROUNDS !== 'undefined' && TURNAROUNDS[selectedTaIndex]) {
+        var ta = TURNAROUNDS[selectedTaIndex];
+        var qty = parseInt(document.getElementById('qtyInput').value) || 1;
+        var pricing = ta.pricing || [];
+        var bestPrice = null;
+        for (var i = 0; i < pricing.length; i++) {
+            if (pricing[i].quantity <= qty) bestPrice = pricing[i].price;
+        }
+        if (bestPrice !== null) {
+            document.getElementById('hiddenTurnaroundPrice').value = bestPrice;
+        }
     }
     // Quantity
     var qtyEl = document.querySelector('.pd-qty-input') || document.querySelector('[name="quantity"]');
@@ -1000,5 +1065,53 @@ function submitWithArtwork() {
     closeUploadModal();
     document.getElementById('addToBasketForm').submit();
 }
+
+// ═══ VARIATION PRICING ═══
+@if(!empty($hasVariations))
+(function(){
+    var VD = @json($variationData);
+    var PN = @json($product['name']);
+    var va = (VD.attributes||[]).filter(function(a){return a.used_for_variations&&a.values&&a.values.length>0;});
+    var vt = VD.turnarounds_v||[], vq = VD.quantities||[], vars = VD.variations||[];
+    var sqty=null, sturn=null;
+
+    function opts(){var o={};document.querySelectorAll('.var-selector').forEach(function(s){o[s.dataset.attrId]=parseInt(s.value)});return o;}
+    function findVar(o){for(var i=0;i<vars.length;i++){var v=vars[i];if(!v.enabled)continue;var s=v.selections||[],m=true;for(var j=0;j<va.length;j++){var a=va[j],sl=s.find(function(x){return x.attribute_id==a.id});if(!sl||sl.attribute_value_id!=o[a.id]){m=false;break;}}if(m)return v;}return null;}
+    function qd(v,q){return(v.disabled_quantities||[]).indexOf(q)!==-1;}
+    function gc(v,q,t){var p=v.pricing||[];for(var i=0;i<p.length;i++)if(p[i].quantity==q&&String(p[i].turnaround_id)==String(t))return p[i];return null;}
+
+    window.updateVariationPrice=function(){
+        var o=opts(),mv=findVar(o),nm=document.getElementById('varNoMatch'),tb=document.getElementById('varPriceTable'),sm=document.getElementById('varSummary');
+        if(!mv){nm.style.display='block';tb.innerHTML='';sm.style.display='none';return;}
+        nm.style.display='none';
+        if(!vt.length||!vq.length){tb.innerHTML='<div style="color:#999;font-size:13px;padding:12px;text-align:center">No turnarounds/quantities configured.</div>';return;}
+        var h='<div style="overflow-x:auto"><table style="width:100%;border-collapse:separate;border-spacing:0 6px;font-size:14px"><thead><tr>';
+        h+='<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase">Quantity</th>';
+        vt.forEach(function(t){h+='<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase">'+t.label+'<div style="font-size:9px;font-weight:400;color:#9ca3af;margin-top:2px">'+(t.working_days_min==t.working_days_max?t.working_days_min+' Working Day'+(t.working_days_min>1?'s':''):t.working_days_min+'-'+t.working_days_max+' Days')+'</div></th>';});
+        h+='</tr></thead><tbody>';
+        vq.forEach(function(q){if(qd(mv,q.quantity))return;h+='<tr>';var qa=sqty==q.quantity;h+='<td style="padding:10px 14px;font-weight:700;cursor:pointer;border-radius:6px 0 0 6px;transition:all .15s;'+(qa?'background:#1e3a6e;color:#fff':'background:#f9fafb;color:#1e3a6e')+'" onclick="selectVarQty('+q.quantity+')">'+q.quantity+'</td>';
+        vt.forEach(function(t){var c=gc(mv,q.quantity,t.id),cd=c?c.disabled:false,p=c?c.price:null,is=sqty==q.quantity&&sturn==t.id;h+='<td style="padding:3px">';if(cd)h+='<div style="padding:10px 14px;text-align:center;background:#f9fafb;color:#9ca3af;font-size:12px;border-radius:6px;border:2px solid #e5e7eb">Not Available</div>';else h+='<div style="padding:10px 14px;text-align:center;font-weight:600;cursor:pointer;border-radius:6px;transition:all .15s;'+(is?'background:#e63946;color:#fff;border:2px solid #e63946':'background:#fff;color:#1e3a6e;border:2px solid #e5e7eb')+'" onclick="selectVarCell('+q.quantity+','+t.id+')">'+(p?'£'+parseFloat(p).toFixed(2):'—')+'</div>';h+='</td>';});h+='</tr>';});
+        h+='</tbody></table></div>';tb.innerHTML=h;updateVS(mv);
+    };
+    window.selectVarQty=function(q){sqty=q;updateVariationPrice();};
+    window.selectVarCell=function(q,t){sqty=q;sturn=t;updateVariationPrice();};
+    function updateVS(mv){
+        var sm=document.getElementById('varSummary');
+        if(!mv||!sqty||!sturn){sm.style.display='none';return;}
+        var c=gc(mv,sqty,sturn);if(!c||c.disabled){sm.style.display='none';return;}
+        var p=c.price,t=vt.find(function(x){return x.id==sturn;});
+        document.getElementById('varSummaryText').textContent=sqty+' × '+PN+' — '+(t?t.label:'')+' delivery';
+        var sp=[];document.querySelectorAll('.var-selector').forEach(function(s){sp.push(s.options[s.selectedIndex].text)});
+        document.getElementById('varSummarySpecs').textContent=sp.join(' · ');
+        document.getElementById('varSummaryPrice').textContent=p?'£'+parseFloat(p).toFixed(2):'N/A';
+        document.getElementById('varSummaryVat').textContent=p?'(£'+(parseFloat(p)*1.2).toFixed(2)+' inc. VAT) × '+sqty+' = £'+(parseFloat(p)*sqty).toFixed(2):'';
+        sm.style.display='block';
+        var hp=document.getElementById('hiddenPrice'),hq=document.getElementById('hiddenQty');
+        if(hp)hp.value=p||0;if(hq)hq.value=sqty||1;
+        var hvp=document.getElementById('hiddenVariationPrice');if(hvp)hvp.value=p||0;
+    }
+    document.addEventListener('DOMContentLoaded',function(){updateVariationPrice();});
+})();
+@endif
 </script>
 @endsection

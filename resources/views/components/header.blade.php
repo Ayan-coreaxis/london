@@ -30,7 +30,7 @@
                 @endif
             </a>
             {{-- Help --}}
-            <a href="#" class="hdr-icon-link" aria-label="Help">
+            <a href="{{ route('contact') }}" class="hdr-icon-link" aria-label="Help">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <circle cx="12" cy="12" r="10"/>
                     <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
@@ -75,22 +75,22 @@
     {{-- BOTTOM ROW: Nav + Search + Blog (desktop) --}}
     <div class="header-nav-row">
         <nav class="main-nav">
-            <a href="{{ route('products') }}"
-               class="nav-link @if(request()->routeIs('products') || request()->routeIs('home')) active @endif">
-                All Products
-            </a>
-            <a href="{{ route('banners') }}"
-               class="nav-link @if(request()->routeIs('banners')) active @endif">
-                Banners
-            </a>
-            <a href="{{ route('product.show', 'business-cards') }}"
-                class="nav-link @if(request()->routeIs('product.show')) active @endif">
-                Business Cards
-            </a>
-            <a href="{{ route('brochures') }}"
-               class="nav-link @if(request()->routeIs('brochures')) active @endif">
-                Brochures &amp; Booklets
-            </a>
+            @php
+                try { $navLinks = \Illuminate\Support\Facades\DB::table('nav_links')->where('type','header')->where('is_active',true)->orderBy('sort_order')->get(); } catch(\Exception $e) { $navLinks = collect([]); }
+            @endphp
+            @if($navLinks->count() > 0)
+                @foreach($navLinks as $nl)
+                    <a href="{{ $nl->url }}"
+                       class="nav-link @if(request()->is(ltrim($nl->url,'/'))) active @endif">
+                        {{ $nl->label }}
+                    </a>
+                @endforeach
+            @else
+                <a href="{{ route('products') }}" class="nav-link @if(request()->routeIs('products') || request()->routeIs('home')) active @endif">All Products</a>
+                <a href="{{ route('banners') }}" class="nav-link">Banners</a>
+                <a href="{{ route('product.show', 'business-cards') }}" class="nav-link">Business Cards</a>
+                <a href="{{ route('brochures') }}" class="nav-link">Brochures &amp; Booklets</a>
+            @endif
         </nav>
         {{-- Search --}}
         <form class="nav-search" action="{{ route('search') }}" method="GET">
@@ -119,26 +119,18 @@
 
         {{-- Mobile Nav Links --}}
         <nav class="mobile-nav">
-            <a href="{{ route('products') }}"
-               class="mobile-nav-link @if(request()->routeIs('products') || request()->routeIs('home')) active @endif">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="7" height="7"/><rect x="15" y="3" width="7" height="7"/><rect x="15" y="14" width="7" height="7"/><rect x="2" y="14" width="7" height="7"/></svg>
-                All Products
-            </a>
-            <a href="{{ route('banners') }}"
-               class="mobile-nav-link @if(request()->routeIs('banners')) active @endif">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="1"/></svg>
-                Banners
-            </a>
-            <a href="{{ route('product.show', 'business-cards') }}"
-               class="mobile-nav-link @if(request()->routeIs('product.show')) active @endif">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M6 15h2"/></svg>
-                Business Cards
-            </a>
-            <a href="{{ route('brochures') }}"
-               class="mobile-nav-link @if(request()->routeIs('brochures')) active @endif">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
-                Brochures &amp; Booklets
-            </a>
+            @php
+                try { $mobileNavLinks = \Illuminate\Support\Facades\DB::table('nav_links')->where('type','header')->where('is_active',true)->orderBy('sort_order')->get(); } catch(\Exception $e) { $mobileNavLinks = collect([]); }
+            @endphp
+            @if($mobileNavLinks->count() > 0)
+                @foreach($mobileNavLinks as $mnl)
+                    <a href="{{ $mnl->url }}" class="mobile-nav-link @if(request()->is(ltrim($mnl->url,'/'))) active @endif">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="7" height="7"/><rect x="15" y="3" width="7" height="7"/><rect x="15" y="14" width="7" height="7"/><rect x="2" y="14" width="7" height="7"/></svg>
+                        {{ $mnl->label }}
+                    </a>
+                @endforeach
+            @else
+            @endif
             <a href="{{ route('blog') }}"
                class="mobile-nav-link @if(request()->routeIs('blog')) active @endif">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>

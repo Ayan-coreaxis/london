@@ -47,15 +47,21 @@
         {{-- Col 3: Links --}}
         <div class="footer-col">
             <h4>Useful Links</h4>
-            <a href="{{ route('login') }}">Login / Register</a>
-            <a href="{{ route('about') }}">About Us</a>
-            <a href="#">Sustainable Printing</a>
-            <a href="#">FAQ's</a>
-            <a href="{{ route('terms') }}">Terms &amp; Conditions</a>
-            <a href="{{ route('privacy') }}">Privacy Policy</a>
-            <a href="{{ route('products') }}">All Products</a>
-            <a href="#">Request a Quote</a>
-            <a href="{{ route('admin.login') }}">Admin Login</a>
+            @php
+                try { $footerLinks = \Illuminate\Support\Facades\DB::table('footer_links')->where('is_active',true)->orderBy('sort_order')->get(); } catch(\Exception $e) { $footerLinks = collect([]); }
+            @endphp
+            @if($footerLinks->count() > 0)
+                @foreach($footerLinks as $fl)
+                    <a href="{{ $fl->url }}" target="{{ $fl->target }}">{{ $fl->label }}</a>
+                @endforeach
+            @else
+                <a href="{{ route('login') }}">Login / Register</a>
+                <a href="{{ route('about') }}">About Us</a>
+                <a href="{{ route('contact') }}">Contact Us</a>
+                <a href="{{ route('terms') }}">Terms &amp; Conditions</a>
+                <a href="{{ route('privacy') }}">Privacy Policy</a>
+                <a href="{{ route('products') }}">All Products</a>
+            @endif
         </div>
 
     </div>

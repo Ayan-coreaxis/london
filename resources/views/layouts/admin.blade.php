@@ -89,8 +89,11 @@ textarea.form-control{height:80px;padding:12px 13px;resize:vertical}
       <a href="{{ route('admin.orders.index') }}" class="nav-link {{ request()->routeIs('admin.orders*') ? 'active' : '' }}">
         <i class="fas fa-shopping-bag"></i> Orders
       </a>
-      <a href="{{ route('admin.products.index') }}" class="nav-link {{ request()->routeIs('admin.products*') ? 'active' : '' }}">
+      <a href="{{ route('admin.products.index') }}" class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
         <i class="fas fa-box"></i> Products
+      </a>
+      <a href="{{ route('admin.vpm.index') }}" class="nav-link {{ request()->routeIs('admin.vpm.*') ? 'active' : '' }}">
+        <i class="fas fa-th"></i> Variation Products
       </a>
       <div class="nav-section">People</div>
       <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
@@ -107,6 +110,24 @@ textarea.form-control{height:80px;padding:12px 13px;resize:vertical}
       <div class="nav-section">Config</div>
       <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings*') ? 'active' : '' }}">
         <i class="fas fa-cog"></i> Site Settings
+      </a>
+      <a href="{{ url('admin/delivery') }}" class="nav-link {{ request()->is('admin/delivery*') ? 'active' : '' }}">
+        <i class="fas fa-truck"></i> Delivery
+      </a>
+      <a href="{{ url('admin/payment-methods') }}" class="nav-link {{ request()->is('admin/payment-methods*') ? 'active' : '' }}">
+        <i class="fas fa-credit-card"></i> Payment Methods
+      </a>
+      <a href="{{ url('admin/promos') }}" class="nav-link {{ request()->is('admin/promos*') ? 'active' : '' }}">
+        <i class="fas fa-tags"></i> Promo Codes
+      </a>
+      <a href="{{ url('admin/nav-links') }}" class="nav-link {{ request()->is('admin/nav-links*') ? 'active' : '' }}">
+        <i class="fas fa-bars"></i> Navigation
+      </a>
+      <a href="{{ url('admin/footer-links') }}" class="nav-link {{ request()->is('admin/footer-links*') ? 'active' : '' }}">
+        <i class="fas fa-link"></i> Footer Links
+      </a>
+      <a href="{{ url('admin/activity-log') }}" class="nav-link {{ request()->is('admin/activity-log*') ? 'active' : '' }}">
+        <i class="fas fa-history"></i> Activity Log
       </a>
     </nav>
     <div class="sidebar-footer">

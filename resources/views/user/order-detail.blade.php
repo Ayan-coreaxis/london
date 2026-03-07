@@ -195,6 +195,16 @@
     </a>
 
     {{-- Alerts --}}
+    @if($errors->any())
+        <div style="background:#fff3f2;border:1px solid #fbc9c6;border-radius:8px;padding:13px 16px;font-size:14px;color:#c0392b;margin-bottom:20px;">
+            ⚠️ <strong>Error:</strong>
+            <ul style="margin:5px 0 0 20px;padding:0;">
+                @foreach ($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     @if(session('success'))
         <div style="background:#f0faf0;border:1px solid #99dd99;border-radius:8px;padding:13px 16px;font-size:14px;color:#2a7a2a;margin-bottom:20px;">✅ {{ session('success') }}</div>
     @endif
@@ -230,10 +240,17 @@
 
     {{-- Progress Tracker --}}
     @php
-        $steps    = ['pending','processing','printing','dispatched','delivered'];
-        $stepLabels = ['Order Placed','Processing','Printing','Dispatched','Delivered'];
+        $steps    = ['pending','confirmed','in_production','dispatched','completed'];
+        $stepLabels = ['Order Placed','Confirmed','In Production','Dispatched','Completed'];
         $currentIdx = array_search($order->status, $steps);
-        if ($currentIdx === false) $currentIdx = 0;
+        if ($currentIdx === false) {
+            // Handle cancelled separately
+            if ($order->status === 'cancelled') {
+                $currentIdx = 0;
+            } else {
+                $currentIdx = 0;
+            }
+        }
         $fillPct = $currentIdx > 0 ? ($currentIdx / (count($steps)-1)) * 100 : 0;
     @endphp
     <div class="progress-track">
@@ -303,6 +320,80 @@
                     </div>
                 </div>
                 @endforeach
+            </div>
+
+            {{-- ═══ ARTWORK FILES ═══ --}}
+            <div class="order-panel" style="margin-bottom:20px">
+                <div class="panel-hdr" style="display:flex;justify-content:space-between;align-items:center">
+                    <span>Artwork Files</span>
+                    <span style="font-size:12px;color:#888;font-weight:400">{{ count($artworkFiles ?? []) }} file(s)</span>
+                </div>
+
+                @if(!empty($artworkFiles) && count($artworkFiles) > 0)
+                <div style="padding:16px 22px">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+                    @foreach($artworkFiles as $art)
+                    <div style="border:1px solid #e8e8e8;border-radius:8px;overflow:hidden;background:#fafafa">
+                        <div style="height:100px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;overflow:hidden">
+                            @if(in_array($art->file_type, ['jpg','jpeg','png']))
+                                <a href="{{ asset($art->file_path) }}" target="_blank"><img src="{{ asset($art->file_path) }}" style="width:100%;height:100px;object-fit:cover"></a>
+                            @elseif($art->file_type === 'pdf')
+                                <a href="{{ asset($art->file_path) }}" target="_blank" style="text-decoration:none;text-align:center">
+                                    <svg width="32" height="32" fill="#e53935" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8" fill="none" stroke="#fff" stroke-width="1.5"/></svg>
+                                    <div style="font-size:10px;color:#888;margin-top:2px">PDF</div>
+                                </a>
+                            @else
+                                <a href="{{ asset($art->file_path) }}" target="_blank" style="text-decoration:none;text-align:center">
+                                    <svg width="32" height="32" fill="#1e3a6e" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8" fill="none" stroke="#fff" stroke-width="1.5"/></svg>
+                                    <div style="font-size:10px;color:#888;margin-top:2px">{{ strtoupper($art->file_type) }}</div>
+                                </a>
+                            @endif
+                        </div>
+                        <div style="padding:8px 10px">
+                            <div style="font-size:11px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ $art->file_name }}">{{ $art->file_name }}</div>
+                            <div style="font-size:10px;color:#aaa;margin-top:2px">{{ $art->label ?? '' }} · {{ number_format($art->file_size / 1024, 0) }} KB</div>
+                            <div style="display:flex;gap:6px;margin-top:6px">
+                                <a href="{{ route('artwork.download', $art->id) }}" style="font-size:11px;color:#1e3a6e;font-weight:700;text-decoration:none">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Download
+                                </a>
+                                <a href="{{ asset($art->file_path) }}" target="_blank" style="font-size:11px;color:#888;text-decoration:none">View</a>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- Upload form --}}
+                @if(in_array($order->status, ['pending','confirmed','in_production']))
+                <div style="padding:16px 22px;border-top:1px solid #f0f0f0;background:#f8f9ff">
+                    <form method="POST" action="{{ route('user.order.artwork.upload', $order->id) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div style="font-size:13px;font-weight:700;color:#1e3a6e;margin-bottom:8px">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Upload Artwork Files
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+                            <div style="flex:1;min-width:200px">
+                                <input type="file" name="artwork_files[]" multiple accept=".pdf,.jpg,.jpeg,.png,.ai,.eps,.tiff" required
+                                    style="width:100%;padding:8px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;background:#fff">
+                            </div>
+                            <div>
+                                <select name="order_item_id" style="padding:8px 12px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;background:#fff">
+                                    <option value="">All items</option>
+                                    @foreach($items as $itm)<option value="{{ $itm->id }}">{{ $itm->product_name }}</option>@endforeach
+                                </select>
+                            </div>
+                            <button type="submit" style="padding:9px 20px;background:#1e3a6e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+                                Upload Files
+                            </button>
+                        </div>
+                        <div style="font-size:11px;color:#888;margin-top:6px">Accepted: PDF, JPG, PNG, AI, EPS, TIFF (max 1.5GB per file)</div>
+                    </form>
+                </div>
+                @endif
             </div>
 
             {{-- Status History --}}
@@ -403,7 +494,41 @@
             </div>
 
             {{-- Shop again --}}
-            <a href="{{ route('products') }}" class="btn-shop">🖨️ Order Again</a>
+            <form method="POST" action="{{ route('user.order.reorder', $order->id) }}" style="margin:0 22px 10px">
+                @csrf
+                <button type="submit" style="display:block;width:100%;padding:12px 22px;background:#1e3a6e;color:#fff;border-radius:7px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:900;text-align:center;border:none;cursor:pointer;transition:background .2s">
+                    🔄 Re-Order Same Items
+                </button>
+            </form>
+            <a href="{{ route('products') }}" class="btn-shop">🖨️ Browse Products</a>
+
+            {{-- Order Notes / Messages --}}
+            <div class="order-panel" style="margin-top:20px">
+                <div class="panel-hdr">Messages</div>
+                <div style="max-height:300px;overflow-y:auto;padding:14px 22px">
+                    @forelse($orderNotes ?? [] as $note)
+                    <div style="margin-bottom:12px;padding:10px 14px;border-radius:8px;{{ $note->author_type === 'admin' ? 'background:#f0f4ff;border-left:3px solid #1e3a6e' : 'background:#f9f9f9;border-left:3px solid #22a85a' }}">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                            <strong style="font-size:12px;color:{{ $note->author_type === 'admin' ? '#1e3a6e' : '#22a85a' }}">{{ $note->author_type === 'admin' ? '🏢 ' . $note->author_name : '👤 You' }}</strong>
+                            <span style="font-size:10px;color:#aaa">{{ \Carbon\Carbon::parse($note->created_at)->format('d M H:i') }}</span>
+                        </div>
+                        <div style="font-size:13px;color:#444;line-height:1.6">{{ $note->message }}</div>
+                    </div>
+                    @empty
+                    <div style="text-align:center;padding:16px;color:#aaa;font-size:13px">No messages yet</div>
+                    @endforelse
+                </div>
+                <div style="padding:12px 22px;border-top:1px solid #f0f0f0;background:#fafafa">
+                    <form method="POST" action="{{ route('user.order.note', $order->id) }}">
+                        @csrf
+                        <div style="display:flex;gap:8px">
+                            <input type="text" name="message" placeholder="Send a message about your order..." required
+                                style="flex:1;padding:10px 14px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;outline:none">
+                            <button type="submit" style="padding:10px 18px;background:#1e3a6e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
     </div>

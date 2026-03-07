@@ -11,19 +11,15 @@ class ProductController extends Controller
     // =============================================
     private function uploadImage($file): string
     {
-        $folder = public_path('uploads' . DIRECTORY_SEPARATOR . 'products');
+        $folder = public_path('uploads/products');
 
-        if (!is_dir($folder)) {
-            mkdir($folder, 0777, true);
+        // Folder na ho to bana do
+        if (!file_exists($folder)) {
+            mkdir($folder, 0755, true);
         }
 
-        $filename = time() . '_' . uniqid() . '.' . strtolower($file->getClientOriginalExtension());
-        $destination = $folder . DIRECTORY_SEPARATOR . $filename;
-
-        // move() ki jagah copy use karo - PHP temp file permission issue fix
-        if (!copy($file->getRealPath(), $destination)) {
-            throw new \RuntimeException("Image upload failed. Cannot write to: {$destination}");
-        }
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move($folder, $filename);
 
         return 'uploads/products/' . $filename;
     }
@@ -90,6 +86,30 @@ class ProductController extends Controller
         }
         $turnarounds = array_values($turnarounds);
 
+        // ===== VARIATION-BASED PRICING =====
+        $variationData = ['attributes' => [], 'turnarounds_v' => [], 'quantities' => [], 'variations' => []];
+        try {
+            $vAttrs = DB::select("SELECT id, name, visible, used_for_variations, sort_order FROM product_attributes WHERE product_id = ? ORDER BY sort_order", [$id]);
+            foreach ($vAttrs as &$va) {
+                $va->values = DB::select("SELECT id, value, sort_order FROM product_attribute_values WHERE attribute_id = ? ORDER BY sort_order", [$va->id]);
+                $va->visible = (bool)$va->visible;
+                $va->used_for_variations = (bool)$va->used_for_variations;
+            }
+            $variationData['attributes'] = $vAttrs;
+            $variationData['turnarounds_v'] = DB::select("SELECT id, label, working_days_min, working_days_max, artwork_deadline, sort_order FROM product_turnarounds WHERE product_id = ? ORDER BY sort_order", [$id]);
+            $variationData['quantities'] = DB::select("SELECT id, quantity, sort_order FROM product_quantities WHERE product_id = ? ORDER BY sort_order", [$id]);
+            $vVars = DB::select("SELECT id, sku, enabled, sort_order FROM product_variations WHERE product_id = ? ORDER BY sort_order", [$id]);
+            foreach ($vVars as &$vv) {
+                $vv->enabled = (bool)$vv->enabled;
+                $vv->selections = DB::select("SELECT attribute_id, attribute_value_id FROM product_variation_attributes WHERE variation_id = ?", [$vv->id]);
+                $vv->pricing = DB::select("SELECT turnaround_id, quantity, price, disabled FROM product_variation_pricing WHERE variation_id = ?", [$vv->id]);
+                foreach ($vv->pricing as &$pp) { $pp->price = (float)$pp->price; $pp->disabled = (bool)$pp->disabled; }
+                $vv->disabled_quantities = array_map(fn($r) => (int)$r->quantity, DB::select("SELECT quantity FROM product_variation_disabled_qty WHERE variation_id = ?", [$vv->id]));
+            }
+            $variationData['variations'] = $vVars;
+        } catch (\Exception $e) {}
+        $hasVariations = count($variationData['variations']) > 0 && count($variationData['attributes']) > 0;
+
         return view('pages.product-details', [
             'product'         => (array)$product,
             'options'         => array_values($options),
@@ -98,6 +118,8 @@ class ProductController extends Controller
             'faqs'            => $faqs,
             'relatedProducts' => $relatedProducts,
             'turnarounds'     => $turnarounds,
+            'variationData'   => $variationData,
+            'hasVariations'   => $hasVariations,
         ]);
     }
 
@@ -125,11 +147,18 @@ class ProductController extends Controller
         }
 
         $slug = $this->uniqueSlug(Str::slug($request->name));
-        DB::insert("INSERT INTO products (name,slug,category,description,base_price,sku,image1,image2,image3,image4,status,sort_order,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
-            [$request->name,$slug,$request->category??'',$request->description??'',$request->base_price??0,$request->sku??'',$images['image1'],$images['image2'],$images['image3'],$images['image4'],$request->status??'active',$request->sort_order??0]);
+        try {
+            DB::insert("INSERT INTO products (name,slug,category,description,base_price,sku,image1,image2,image3,image4,status,sort_order,artwork_setup_text,artwork_templates_text,technical_spec_text,key_info_text,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
+                [$request->name,$slug,$request->category??'',$request->description??'',$request->base_price??0,$request->sku??'',$images['image1'],$images['image2'],$images['image3'],$images['image4'],$request->status??'active',$request->sort_order??0,$request->artwork_setup_text,$request->artwork_templates_text,$request->technical_spec_text,$request->key_info_text]);
+        } catch (\Exception $e) {
+            // Fallback if new columns don't exist yet
+            DB::insert("INSERT INTO products (name,slug,category,description,base_price,sku,image1,image2,image3,image4,status,sort_order,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
+                [$request->name,$slug,$request->category??'',$request->description??'',$request->base_price??0,$request->sku??'',$images['image1'],$images['image2'],$images['image3'],$images['image4'],$request->status??'active',$request->sort_order??0]);
+        }
         $pid = DB::getPdo()->lastInsertId();
         $this->saveOptions($pid,$request); $this->savePresets($pid,$request);
         $this->saveVariants($pid,$request); $this->saveFaqs($pid,$request);
+        try { \App\Helpers\AdminLog::log('created_product', 'product', $pid, "Created: {$request->name}"); } catch (\Exception $e) {}
         return redirect()->route('admin.products.index')->with('success',"Product '{$request->name}' added!");
     }
 
@@ -158,17 +187,24 @@ class ProductController extends Controller
         }
 
         $imgStr = count($imgSql) ? ','.implode(',',$imgSql) : '';
-        DB::update("UPDATE products SET name=?,category=?,description=?,base_price=?,sku=?,status=?,sort_order=? $imgStr,updated_at=NOW() WHERE id=?",
-            array_merge([$request->name,$request->category??'',$request->description??'',$request->base_price??0,$request->sku??'',$request->status??'active',$request->sort_order??0],$imgParams,[$id]));
+        try {
+            DB::update("UPDATE products SET name=?,category=?,description=?,base_price=?,sku=?,status=?,sort_order=?,artwork_setup_text=?,artwork_templates_text=?,technical_spec_text=?,key_info_text=? $imgStr,updated_at=NOW() WHERE id=?",
+                array_merge([$request->name,$request->category??'',$request->description??'',$request->base_price??0,$request->sku??'',$request->status??'active',$request->sort_order??0,$request->artwork_setup_text,$request->artwork_templates_text,$request->technical_spec_text,$request->key_info_text],$imgParams,[$id]));
+        } catch (\Exception $e) {
+            DB::update("UPDATE products SET name=?,category=?,description=?,base_price=?,sku=?,status=?,sort_order=? $imgStr,updated_at=NOW() WHERE id=?",
+                array_merge([$request->name,$request->category??'',$request->description??'',$request->base_price??0,$request->sku??'',$request->status??'active',$request->sort_order??0],$imgParams,[$id]));
+        }
         DB::delete("DELETE FROM product_options WHERE product_id=?",[$id]); $this->saveOptions($id,$request);
         DB::delete("DELETE FROM product_presets  WHERE product_id=?",[$id]); $this->savePresets($id,$request);
         DB::delete("DELETE FROM product_variants WHERE product_id=?",[$id]); $this->saveVariants($id,$request);
         DB::delete("DELETE FROM product_faqs     WHERE product_id=?",[$id]); $this->saveFaqs($id,$request);
+        try { \App\Helpers\AdminLog::log('updated_product', 'product', $id, "Updated: {$request->name}"); } catch (\Exception $e) {}
         return redirect()->route('admin.products.edit',$id)->with('success','Product updated!');
     }
 
     public function adminDestroy(int $id)
     {
+        try { \App\Helpers\AdminLog::log('deleted_product', 'product', $id, 'Product deleted'); } catch (\Exception $e) {}
         DB::delete("DELETE FROM products WHERE id=?",[$id]);
         return redirect()->route('admin.products.index')->with('success','Deleted.');
     }

@@ -74,9 +74,22 @@ class HomeController extends Controller
 
     public function blog(Request $request)
     {
-        $blogs    = $this->getBlogs();
+        $category = $request->get('category');
+        $categories = collect([]);
+        $blogs = collect([]);
+
+        try {
+            $categories = Blog::published()->distinct()->whereNotNull('category')->pluck('category')->filter();
+
+            $query = Blog::published()->ordered();
+            if ($category) {
+                $query->where('category', $category);
+            }
+            $blogs = $query->paginate(12);
+        } catch (\Exception $e) {}
+
         $settings = SiteSetting::allKeyed();
-        return view('pages.blog', compact('blogs','settings'));
+        return view('pages.blog', compact('blogs', 'categories', 'settings'));
     }
 
     private function getBlogs(): array

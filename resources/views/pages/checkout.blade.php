@@ -434,7 +434,19 @@
                     </div>
                     <div class="co-panel-body">
                         <div class="delivery-options">
-                            <label class="delivery-opt selected" onclick="selectDelivery(this)">
+                            @if(isset($deliveryMethods) && $deliveryMethods->count() > 0)
+                                @foreach($deliveryMethods as $di => $dm)
+                                <label class="delivery-opt {{ $di === 0 ? 'selected' : '' }}" onclick="selectDelivery(this, {{ $dm->price }})">
+                                    <input type="radio" name="delivery_method" value="{{ $dm->slug }}" {{ $di === 0 ? 'checked' : '' }}>
+                                    <div>
+                                        <span class="delivery-opt-label">{{ $dm->name }}</span>
+                                        <span class="delivery-opt-sub">{{ $dm->description }}</span>
+                                        <span class="delivery-opt-price">{{ $dm->price > 0 ? '£'.number_format($dm->price,2) : 'FREE' }}</span>
+                                    </div>
+                                </label>
+                                @endforeach
+                            @else
+                            <label class="delivery-opt selected" onclick="selectDelivery(this, 0)">
                                 <input type="radio" name="delivery_method" value="next_day" checked>
                                 <div>
                                     <span class="delivery-opt-label">Next Day Delivery</span>
@@ -442,7 +454,7 @@
                                     <span class="delivery-opt-price">FREE</span>
                                 </div>
                             </label>
-                            <label class="delivery-opt" onclick="selectDelivery(this)">
+                            <label class="delivery-opt" onclick="selectDelivery(this, 19.99)">
                                 <input type="radio" name="delivery_method" value="same_day">
                                 <div>
                                     <span class="delivery-opt-label">Same Day Rush</span>
@@ -450,6 +462,7 @@
                                     <span class="delivery-opt-price">£19.99</span>
                                 </div>
                             </label>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -462,8 +475,16 @@
                     </div>
                     <div class="co-panel-body">
                         <div class="payment-methods">
-                            <label class="payment-opt selected" onclick="selectPayment(this, 'card')">
-                                <input type="radio" name="payment_method" value="card" checked>
+                            @php
+                                $cardOn = ($paySettings['payment_card_enabled'] ?? '1') == '1';
+                                $paypalOn = ($paySettings['payment_paypal_enabled'] ?? '1') == '1';
+                                $invoiceOn = ($paySettings['payment_invoice_enabled'] ?? '1') == '1';
+                                $firstMethod = $cardOn ? 'card' : ($paypalOn ? 'paypal' : ($invoiceOn ? 'invoice' : 'card'));
+                            @endphp
+
+                            @if($cardOn)
+                            <label class="payment-opt {{ $firstMethod === 'card' ? 'selected' : '' }}" onclick="selectPayment(this, 'card')">
+                                <input type="radio" name="payment_method" value="card" {{ $firstMethod === 'card' ? 'checked' : '' }}>
                                 <span class="payment-opt-label">Credit / Debit Card</span>
                                 <div class="payment-logos">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/40px-Mastercard-logo.svg.png" alt="MC" height="18">
@@ -472,7 +493,7 @@
                             </label>
 
                             {{-- Card fields --}}
-                            <div class="card-fields show" id="cardFields">
+                            <div class="card-fields {{ $firstMethod === 'card' ? 'show' : '' }}" id="cardFields">
                                 <div class="co-row single" style="margin-bottom:10px;">
                                     <div class="co-field">
                                         <label>Card Number</label>
@@ -490,19 +511,24 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
-                            <label class="payment-opt" onclick="selectPayment(this, 'paypal')">
-                                <input type="radio" name="payment_method" value="paypal">
+                            @if($paypalOn)
+                            <label class="payment-opt {{ $firstMethod === 'paypal' ? 'selected' : '' }}" onclick="selectPayment(this, 'paypal')">
+                                <input type="radio" name="payment_method" value="paypal" {{ $firstMethod === 'paypal' ? 'checked' : '' }}>
                                 <span class="payment-opt-label">PayPal</span>
                                 <div class="payment-logos">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/80px-PayPal.svg.png" alt="PayPal" height="20">
                                 </div>
                             </label>
+                            @endif
 
-                            <label class="payment-opt" onclick="selectPayment(this, 'invoice')">
-                                <input type="radio" name="payment_method" value="invoice">
+                            @if($invoiceOn)
+                            <label class="payment-opt {{ $firstMethod === 'invoice' ? 'selected' : '' }}" onclick="selectPayment(this, 'invoice')">
+                                <input type="radio" name="payment_method" value="invoice" {{ $firstMethod === 'invoice' ? 'checked' : '' }}>
                                 <span class="payment-opt-label">Pay by Invoice (Trade accounts)</span>
                             </label>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -541,7 +567,7 @@
                         </div>
                         <div class="co-summary-line free">
                             <span class="k">Delivery</span>
-                            <span class="v">FREE</span>
+                            <span class="v" id="coDeliveryVal">FREE</span>
                         </div>
                         <div class="co-summary-line">
                             <span class="k">VAT (20%)</span>
@@ -550,7 +576,7 @@
                         <div class="co-sum-divider"></div>
                         <div class="co-summary-line total">
                             <span class="k">Total</span>
-                            <span class="v">£{{ number_format($total, 2) }}</span>
+                            <span class="v" id="coTotalVal">£{{ number_format($total, 2) }}</span>
                         </div>
 
                         <div style="height:16px;"></div>
@@ -595,16 +621,44 @@
 
 @section('scripts')
 <script>
-function selectDelivery(label) {
+var checkoutSubtotal = {{ $subtotal }};
+
+function selectDelivery(label, cost) {
     document.querySelectorAll('.delivery-opt').forEach(l => l.classList.remove('selected'));
     label.classList.add('selected');
+    updateCheckoutTotal(cost);
+}
+
+function updateCheckoutTotal(deliveryCost) {
+    var vat = Math.round(checkoutSubtotal * 0.20 * 100) / 100;
+    var total = checkoutSubtotal + deliveryCost + vat;
+
+    // Update delivery line
+    var deliveryEl = document.getElementById('coDeliveryVal');
+    if (deliveryEl) {
+        if (deliveryCost > 0) {
+            deliveryEl.textContent = '£' + deliveryCost.toFixed(2);
+            deliveryEl.style.color = '#333';
+        } else {
+            deliveryEl.textContent = 'FREE';
+            deliveryEl.style.color = '#3c9c3c';
+        }
+    }
+
+    // Update total
+    var totalEl = document.getElementById('coTotalVal');
+    if (totalEl) totalEl.textContent = '£' + total.toFixed(2);
+
+    // Update button
+    var btnEl = document.querySelector('.btn-place-order');
+    if (btnEl) btnEl.textContent = '🔒 Place Order – £' + total.toFixed(2);
 }
 
 function selectPayment(label, type) {
     document.querySelectorAll('.payment-opt').forEach(l => l.classList.remove('selected'));
     label.classList.add('selected');
-    const cardFields = document.getElementById('cardFields');
-    cardFields.classList.toggle('show', type === 'card');
+    var cardFields = document.getElementById('cardFields');
+    if (cardFields) cardFields.classList.toggle('show', type === 'card');
 }
 
 function formatCard(input) {
