@@ -149,6 +149,38 @@ class CartController extends Controller
         return redirect()->route('basket');
     }
 
+    public function uploadArtwork(Request $request, string $cartKey)
+    {
+        $request->validate([
+            'artwork_file' => 'required|file|max:102400|mimes:pdf,jpg,jpeg,png,ai,eps,tiff,tif',
+        ]);
+
+        $cart = session('cart', []);
+        if (!isset($cart[$cartKey])) {
+            return redirect()->route('basket')->with('error', 'Cart item not found.');
+        }
+
+        $file = $request->file('artwork_file');
+        if ($file && $file->isValid()) {
+            try {
+                $storagePath = storage_path('app' . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'artwork');
+                if (!file_exists($storagePath)) mkdir($storagePath, 0755, true);
+                $ext = strtolower($file->getClientOriginalExtension());
+                $filename = time() . '_' . uniqid() . '.' . $ext;
+                $file->move($storagePath, $filename);
+                if (file_exists($storagePath . DIRECTORY_SEPARATOR . $filename)) {
+                    $cart[$cartKey]['artwork_url'] = 'storage/artwork/' . $filename;
+                    session(['cart' => $cart]);
+                    return redirect()->route('basket')->with('success', 'Artwork uploaded!');
+                }
+            } catch (\Exception $e) {
+                Log::error('Cart artwork upload: ' . $e->getMessage());
+            }
+        }
+
+        return redirect()->route('basket')->with('error', 'Upload failed. Check file type and size.');
+    }
+
     public function count()
     {
         return response()->json(['count' => array_sum(array_column(session('cart', []), 'quantity'))]);

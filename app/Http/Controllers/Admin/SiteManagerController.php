@@ -259,15 +259,18 @@ class SiteManagerController extends Controller
 
     public function promoToggle(int $id)
     {
-        $promo = DB::table('promo_codes')->where('id', $id)->first();
-        if ($promo) {
-            DB::table('promo_codes')->where('id', $id)->update([
-                'is_active' => !$promo->is_active,
-                'updated_at' => now(),
-            ]);
+        try {
+            $promo = DB::table('promo_codes')->where('id', $id)->first();
+            if ($promo) {
+                DB::table('promo_codes')->where('id', $id)->update([
+                    'is_active' => !$promo->is_active,
+                    'updated_at' => now(),
+                ]);
+            }
+            return back()->with('success', 'Promo code updated.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error: '.$e->getMessage());
         }
-        return back()->with('success', 'Promo code updated.');
-        } catch (\Exception $e) { return back()->with('error', 'Error: '.$e->getMessage()); }
     }
 
     public function promoDelete(int $id)
