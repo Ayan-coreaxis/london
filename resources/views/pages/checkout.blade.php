@@ -890,6 +890,16 @@ async function applyPromo() {
             if (m) { checkoutDelivery = parseFloat(m[1]) || 0; }
         }
     }
+    // Also initialise payment method on load (shows PayPal buttons, hides Place Order for PayPal etc.)
+    var firstPaymentRadio = document.querySelector('[name="payment_method"]:checked');
+    if (firstPaymentRadio) {
+        var firstPaymentLabel = firstPaymentRadio.closest('.payment-opt');
+        if (firstPaymentLabel) {
+            var oc = firstPaymentLabel.getAttribute('onclick') || '';
+            var pm = oc.match(/selectPayment\(this,\s*'([^']+)',\s*'([^']*)'\)/);
+            if (pm) selectPayment(firstPaymentLabel, pm[1], pm[2]);
+        }
+    }
     updateCheckoutTotals();
 })();
 </script>
