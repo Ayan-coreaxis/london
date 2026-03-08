@@ -476,59 +476,62 @@
                     <div class="co-panel-body">
                         <div class="payment-methods">
                             @php
-                                $cardOn = ($paySettings['payment_card_enabled'] ?? '1') == '1';
-                                $paypalOn = ($paySettings['payment_paypal_enabled'] ?? '1') == '1';
-                                $invoiceOn = ($paySettings['payment_invoice_enabled'] ?? '1') == '1';
-                                $firstMethod = $cardOn ? 'card' : ($paypalOn ? 'paypal' : ($invoiceOn ? 'invoice' : 'card'));
+                                $activePayments = $paymentMethods ?? collect([]);
+                                $firstPm = $activePayments->first();
                             @endphp
 
-                            @if($cardOn)
-                            <label class="payment-opt {{ $firstMethod === 'card' ? 'selected' : '' }}" onclick="selectPayment(this, 'card')">
-                                <input type="radio" name="payment_method" value="card" {{ $firstMethod === 'card' ? 'checked' : '' }}>
-                                <span class="payment-opt-label">Credit / Debit Card</span>
+                            @forelse($activePayments as $pi => $pm)
+                            @php $isFirst = $pi === 0; @endphp
+
+                            <label class="payment-opt {{ $isFirst ? 'selected' : '' }}" onclick="selectPayment(this, '{{ $pm->provider }}', '{{ $pm->slug }}')">
+                                <input type="radio" name="payment_method" value="{{ $pm->slug }}" {{ $isFirst ? 'checked' : '' }}>
+                                <span class="payment-opt-label">{{ $pm->name }}</span>
+                                @if($pm->provider === 'stripe')
                                 <div class="payment-logos">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/40px-Mastercard-logo.svg.png" alt="MC" height="18">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/60px-Visa_Inc._logo.svg.png" alt="Visa" height="18">
                                 </div>
+                                @elseif($pm->provider === 'paypal')
+                                <div class="payment-logos">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/80px-PayPal.svg.png" alt="PayPal" height="20">
+                                </div>
+                                @endif
                             </label>
 
-                            {{-- Card fields --}}
-                            <div class="card-fields {{ $firstMethod === 'card' ? 'show' : '' }}" id="cardFields">
-                                <div class="co-row single" style="margin-bottom:10px;">
-                                    <div class="co-field">
-                                        <label>Card Number</label>
-                                        <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" id="cardNum" oninput="formatCard(this)">
-                                    </div>
-                                </div>
-                                <div class="co-row" style="margin-bottom:0;">
-                                    <div class="co-field">
-                                        <label>Expiry Date</label>
-                                        <input type="text" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)">
-                                    </div>
-                                    <div class="co-field">
-                                        <label>CVV</label>
-                                        <input type="text" placeholder="123" maxlength="4">
-                                    </div>
+                            @if($pm->provider === 'stripe')
+                            {{-- Real Stripe Card Element --}}
+                            <div class="card-fields {{ $isFirst ? 'show' : '' }}" id="stripeCardFields" style="padding:16px;">
+                                <div id="stripe-card-element" style="padding:10px;border:1.5px solid #ddd;border-radius:7px;background:#fafafa;"></div>
+                                <div id="stripe-errors" style="color:#e8352a;font-size:12px;margin-top:6px;"></div>
+                            </div>
+                            @elseif($pm->provider === 'paypal')
+                            {{-- PayPal Buttons --}}
+                            <div id="paypal-button-container" style="display:none;margin:10px 0;padding:0 4px;"></div>
+                            @elseif($pm->slug === 'bank_transfer')
+                            {{-- Bank Transfer Details --}}
+                            @php $bankCfg = json_decode($pm->config ?? '{}', true) ?? []; @endphp
+                            <div class="card-fields" id="bankFields" style="display:none;padding:14px;">
+                                <div style="font-size:13px;color:#333;line-height:1.8;">
+                                    @if(!empty($bankCfg['bank_name']))<div><strong>Bank:</strong> {{ $bankCfg['bank_name'] }}</div>@endif
+                                    @if(!empty($bankCfg['account_name']))<div><strong>Account Name:</strong> {{ $bankCfg['account_name'] }}</div>@endif
+                                    @if(!empty($bankCfg['sort_code']))<div><strong>Sort Code:</strong> {{ $bankCfg['sort_code'] }}</div>@endif
+                                    @if(!empty($bankCfg['account_number']))<div><strong>Account Number:</strong> {{ $bankCfg['account_number'] }}</div>@endif
+                                    <div style="margin-top:8px;font-size:12px;color:#888;">Please use your order reference as payment reference.</div>
                                 </div>
                             </div>
                             @endif
 
-                            @if($paypalOn)
-                            <label class="payment-opt {{ $firstMethod === 'paypal' ? 'selected' : '' }}" onclick="selectPayment(this, 'paypal')">
-                                <input type="radio" name="payment_method" value="paypal" {{ $firstMethod === 'paypal' ? 'checked' : '' }}>
-                                <span class="payment-opt-label">PayPal</span>
-                                <div class="payment-logos">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/80px-PayPal.svg.png" alt="PayPal" height="20">
-                                </div>
+                            @empty
+                            {{-- Fallback if no payment methods in DB --}}
+                            <label class="payment-opt selected" onclick="selectPayment(this, 'stripe', 'stripe_card')">
+                                <input type="radio" name="payment_method" value="stripe_card" checked>
+                                <span class="payment-opt-label">Credit / Debit Card</span>
                             </label>
-                            @endif
-
-                            @if($invoiceOn)
-                            <label class="payment-opt {{ $firstMethod === 'invoice' ? 'selected' : '' }}" onclick="selectPayment(this, 'invoice')">
-                                <input type="radio" name="payment_method" value="invoice" {{ $firstMethod === 'invoice' ? 'checked' : '' }}>
-                                <span class="payment-opt-label">Pay by Invoice (Trade accounts)</span>
-                            </label>
-                            @endif
+                            <div class="card-fields show" id="stripeCardFields" style="padding:16px;">
+                                <div id="stripe-card-element" style="padding:10px;border:1.5px solid #ddd;border-radius:7px;background:#fafafa;"></div>
+                                <div id="stripe-errors" style="color:#e8352a;font-size:12px;margin-top:6px;"></div>
+                            </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -581,7 +584,22 @@
 
                         <div style="height:16px;"></div>
 
-                        <button type="submit" class="btn-place-order">
+                        {{-- Discount line (shown when promo applied) --}}
+                        <div class="co-summary-line" id="coDiscountRow" style="display:none;color:#3c9c3c;">
+                            <span class="k">Discount</span>
+                            <span class="v" id="coDiscountVal" style="color:#3c9c3c;">-£0.00</span>
+                        </div>
+
+                        {{-- Promo Code --}}
+                        <div style="margin-bottom:12px;">
+                            <div style="display:flex;gap:0;">
+                                <input type="text" id="promoCodeInput" placeholder="Promo / discount code" style="flex:1;border:1.5px solid #ddd;border-right:none;border-radius:7px 0 0 7px;padding:9px 12px;font-size:13px;font-family:'Open Sans',sans-serif;outline:none;background:#fafafa;">
+                                <button type="button" onclick="applyPromo()" style="background:#1e3a6e;color:#fff;padding:9px 16px;border-radius:0 7px 7px 0;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;white-space:nowrap;">Apply</button>
+                            </div>
+                            <div id="promoMsg" style="font-size:12px;margin-top:4px;"></div>
+                        </div>
+
+                        <button type="submit" id="placeOrderBtn" class="btn-place-order">
                             🔒 Place Order – £{{ number_format($total, 2) }}
                         </button>
 
@@ -620,56 +638,259 @@
 @endsection
 
 @section('scripts')
+{{-- Load Stripe.js --}}
+@if(!empty($stripePublicKey))
+<script src="https://js.stripe.com/v3/"></script>
+@endif
 <script>
 var checkoutSubtotal = {{ $subtotal }};
+var checkoutDiscount = 0;
+var checkoutDelivery = 0;
+var stripeCardElement = null;
+var stripeInstance = null;
 
+// ─── STRIPE SETUP ──────────────────────────────────────
+@if(!empty($stripePublicKey))
+(function() {
+    if (typeof Stripe === 'undefined') return;
+    stripeInstance = Stripe('{{ $stripePublicKey }}');
+    var elements = stripeInstance.elements();
+    stripeCardElement = elements.create('card', {
+        style: {
+            base: { fontSize: '15px', fontFamily: "'Open Sans', sans-serif", color: '#222', '::placeholder': { color: '#aaa' } },
+            invalid: { color: '#e8352a' }
+        }
+    });
+    var mountEl = document.getElementById('stripe-card-element');
+    if (mountEl) {
+        stripeCardElement.mount('#stripe-card-element');
+        stripeCardElement.on('change', function(e) {
+            var errEl = document.getElementById('stripe-errors');
+            if (errEl) errEl.textContent = e.error ? e.error.message : '';
+        });
+    }
+})();
+@endif
+
+// ─── PAYPAL SETUP ──────────────────────────────────────
+@if(!empty($paypalClientId))
+(function() {
+    var ppScript = document.createElement('script');
+    ppScript.src = 'https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency={{ $paypalCurrency ?? "GBP" }}&intent=capture';
+    ppScript.onload = function() {
+        if (typeof paypal === 'undefined') return;
+        paypal.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
+            createOrder: async function() {
+                var resp = await fetch('{{ route("api.payment.paypal.create") }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        delivery_method: document.querySelector('[name="delivery_method"]:checked')?.value,
+                        promo_code: document.getElementById('promoCodeInput')?.value || ''
+                    })
+                });
+                var data = await resp.json();
+                if (data.error) { alert(data.error); throw new Error(data.error); }
+                return data.orderId;
+            },
+            onApprove: async function(ppData) {
+                var resp = await fetch('{{ route("api.payment.paypal.capture") }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderID: ppData.orderID })
+                });
+                var result = await resp.json();
+                if (result.success) {
+                    // Add payment method to form and submit
+                    setHidden('payment_method', 'paypal');
+                    document.getElementById('checkoutForm').submit();
+                } else {
+                    alert(result.error || 'PayPal payment failed. Please try again.');
+                }
+            },
+            onError: function(err) { console.error('PayPal error', err); alert('PayPal error. Please try another payment method.'); }
+        }).render('#paypal-button-container');
+    };
+    document.head.appendChild(ppScript);
+})();
+@endif
+
+// ─── FORM SUBMIT HANDLER ───────────────────────────────
+document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var method = document.querySelector('[name="payment_method"]:checked')?.value || '';
+    var btn = document.getElementById('placeOrderBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+    try {
+        if (method === 'stripe_card' || method === 'stripe') {
+            // ── Stripe payment ──
+            if (!stripeInstance || !stripeCardElement) {
+                alert('Stripe not loaded. Please refresh and try again.');
+                resetBtn(btn); return;
+            }
+            // Create PaymentIntent server-side
+            var intentResp = await fetch('{{ route("api.payment.stripe") }}', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    delivery_method: document.querySelector('[name="delivery_method"]:checked')?.value || 'next_day_free',
+                    promo_code: document.getElementById('promoCodeInput')?.value || ''
+                })
+            });
+            var intentData = await intentResp.json();
+            if (intentData.error) { alert(intentData.error); resetBtn(btn); return; }
+
+            // Confirm card payment
+            var billingDetails = {
+                name: (document.querySelector('[name="first_name"]')?.value || '') + ' ' + (document.querySelector('[name="last_name"]')?.value || ''),
+                email: document.querySelector('[name="email"]')?.value || '',
+                phone: document.querySelector('[name="phone"]')?.value || '',
+                address: {
+                    line1: document.querySelector('[name="address_line1"]')?.value || '',
+                    city: document.querySelector('[name="city"]')?.value || '',
+                    postal_code: document.querySelector('[name="postcode"]')?.value || '',
+                    country: document.querySelector('[name="country"]')?.value || 'GB'
+                }
+            };
+            var result = await stripeInstance.confirmCardPayment(intentData.clientSecret, {
+                payment_method: { card: stripeCardElement, billing_details: billingDetails }
+            });
+            if (result.error) {
+                var errEl = document.getElementById('stripe-errors');
+                if (errEl) errEl.textContent = result.error.message;
+                resetBtn(btn); return;
+            }
+            setHidden('stripe_payment_intent', result.paymentIntent.id);
+            this.submit();
+
+        } else if (method === 'paypal') {
+            // PayPal is handled by PayPal SDK buttons — just show message
+            alert('Please use the PayPal button to complete payment.');
+            resetBtn(btn);
+
+        } else {
+            // Bank transfer, invoice, or other manual methods — submit directly
+            this.submit();
+        }
+    } catch(err) {
+        console.error('Payment error:', err);
+        alert('Payment processing error. Please try again.');
+        resetBtn(btn);
+    }
+});
+
+function resetBtn(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.textContent = '🔒 Place Order – £' + (checkoutSubtotal - checkoutDiscount + checkoutDelivery + Math.round((checkoutSubtotal - checkoutDiscount) * 0.20 * 100) / 100).toFixed(2);
+}
+
+function setHidden(name, value) {
+    var existing = document.querySelector('[name="' + name + '"][type="hidden"]');
+    if (existing) { existing.value = value; return; }
+    var inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = name; inp.value = value;
+    document.getElementById('checkoutForm').appendChild(inp);
+}
+
+// ─── DELIVERY SELECTION ────────────────────────────────
 function selectDelivery(label, cost) {
     document.querySelectorAll('.delivery-opt').forEach(l => l.classList.remove('selected'));
     label.classList.add('selected');
-    updateCheckoutTotal(cost);
+    checkoutDelivery = cost;
+    updateCheckoutTotals();
 }
 
-function updateCheckoutTotal(deliveryCost) {
-    var vat = Math.round(checkoutSubtotal * 0.20 * 100) / 100;
-    var total = checkoutSubtotal + deliveryCost + vat;
+// ─── PAYMENT SELECTION ────────────────────────────────
+function selectPayment(label, provider, slug) {
+    document.querySelectorAll('.payment-opt').forEach(l => l.classList.remove('selected'));
+    label.classList.add('selected');
+    // Show/hide relevant panels
+    var stripeFields = document.getElementById('stripeCardFields');
+    var paypalContainer = document.getElementById('paypal-button-container');
+    var bankFields = document.getElementById('bankFields');
+    if (stripeFields) stripeFields.classList.toggle('show', provider === 'stripe');
+    if (paypalContainer) paypalContainer.style.display = provider === 'paypal' ? 'block' : 'none';
+    if (bankFields) bankFields.style.display = slug === 'bank_transfer' ? 'block' : 'none';
+    // Place Order button visibility
+    var btn = document.getElementById('placeOrderBtn');
+    if (btn) btn.style.display = provider === 'paypal' ? 'none' : 'block';
+}
 
-    // Update delivery line
+// ─── TOTALS UPDATE ─────────────────────────────────────
+function updateCheckoutTotals() {
+    var vat = Math.round((checkoutSubtotal - checkoutDiscount) * 0.20 * 100) / 100;
+    var total = checkoutSubtotal - checkoutDiscount + checkoutDelivery + vat;
+
     var deliveryEl = document.getElementById('coDeliveryVal');
     if (deliveryEl) {
-        if (deliveryCost > 0) {
-            deliveryEl.textContent = '£' + deliveryCost.toFixed(2);
-            deliveryEl.style.color = '#333';
-        } else {
-            deliveryEl.textContent = 'FREE';
-            deliveryEl.style.color = '#3c9c3c';
-        }
+        if (checkoutDelivery > 0) { deliveryEl.textContent = '£' + checkoutDelivery.toFixed(2); deliveryEl.style.color = '#333'; }
+        else { deliveryEl.textContent = 'FREE'; deliveryEl.style.color = '#3c9c3c'; }
     }
 
-    // Update total
+    var discountRow = document.getElementById('coDiscountRow');
+    if (discountRow) discountRow.style.display = checkoutDiscount > 0 ? 'flex' : 'none';
+    var discountEl = document.getElementById('coDiscountVal');
+    if (discountEl) discountEl.textContent = '-£' + checkoutDiscount.toFixed(2);
+
+    var vatEl = document.querySelector('.co-summary-line .v[id]');
+    // Update VAT display
+    document.querySelectorAll('.co-summary-line').forEach(function(row) {
+        if (row.querySelector('.k') && row.querySelector('.k').textContent.includes('VAT')) {
+            var vEl = row.querySelector('.v');
+            if (vEl) vEl.textContent = '£' + vat.toFixed(2);
+        }
+    });
+
     var totalEl = document.getElementById('coTotalVal');
     if (totalEl) totalEl.textContent = '£' + total.toFixed(2);
 
-    // Update button
-    var btnEl = document.querySelector('.btn-place-order');
-    if (btnEl) btnEl.textContent = '🔒 Place Order – £' + total.toFixed(2);
+    var btn = document.getElementById('placeOrderBtn');
+    if (btn && !btn.disabled) btn.textContent = '🔒 Place Order – £' + total.toFixed(2);
 }
 
-function selectPayment(label, type) {
-    document.querySelectorAll('.payment-opt').forEach(l => l.classList.remove('selected'));
-    label.classList.add('selected');
-    var cardFields = document.getElementById('cardFields');
-    if (cardFields) cardFields.classList.toggle('show', type === 'card');
+// ─── PROMO CODE ────────────────────────────────────────
+async function applyPromo() {
+    var code = (document.getElementById('promoCodeInput')?.value || '').trim().toUpperCase();
+    var msgEl = document.getElementById('promoMsg');
+    if (!code) { if (msgEl) msgEl.innerHTML = ''; return; }
+
+    if (msgEl) msgEl.innerHTML = '<span style="color:#888">Checking...</span>';
+
+    try {
+        var resp = await fetch('{{ route("api.promo.validate") }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code, subtotal: checkoutSubtotal })
+        });
+        var data = await resp.json();
+        if (data.valid) {
+            checkoutDiscount = parseFloat(data.discount) || 0;
+            if (msgEl) msgEl.innerHTML = '<span style="color:#3c9c3c;font-weight:700;">✓ ' + (data.message || 'Discount applied!') + '</span>';
+            updateCheckoutTotals();
+        } else {
+            checkoutDiscount = 0;
+            if (msgEl) msgEl.innerHTML = '<span style="color:#e8352a;">✗ ' + (data.message || 'Invalid or expired code') + '</span>';
+            updateCheckoutTotals();
+        }
+    } catch(err) {
+        if (msgEl) msgEl.innerHTML = '<span style="color:#e8352a;">Could not validate code. Try again.</span>';
+    }
 }
 
-function formatCard(input) {
-    let val = input.value.replace(/\D/g, '').substring(0, 16);
-    input.value = val.replace(/(.{4})/g, '$1 ').trim();
-}
-
-function formatExpiry(input) {
-    let val = input.value.replace(/\D/g, '').substring(0, 4);
-    if (val.length >= 2) val = val.substring(0,2) + ' / ' + val.substring(2);
-    input.value = val;
-}
+// Initialise totals on page load
+(function() {
+    var firstDelivery = document.querySelector('[name="delivery_method"]:checked');
+    if (firstDelivery) {
+        var firstLabel = firstDelivery.closest('.delivery-opt');
+        if (firstLabel && firstLabel.getAttribute('onclick')) {
+            var m = firstLabel.getAttribute('onclick').match(/selectDelivery\(this,\s*([\d.]+)\)/);
+            if (m) { checkoutDelivery = parseFloat(m[1]) || 0; }
+        }
+    }
+    updateCheckoutTotals();
+})();
 </script>
 @endsection
