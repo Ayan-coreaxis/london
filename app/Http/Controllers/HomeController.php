@@ -43,7 +43,11 @@ class HomeController extends Controller
         // Site settings for hero / promo
         $settings = SiteSetting::allKeyed();
 
-        return view('pages.home', compact('products','blogs','settings'));
+        // Delivery methods for home page section
+        $deliveryMethods = collect([]);
+        try { $deliveryMethods = DB::table('delivery_methods')->where('is_active', true)->orderBy('sort_order')->take(4)->get(); } catch (\Exception $e) {}
+
+        return view('pages.home', compact('products','blogs','settings','deliveryMethods'));
     }
 
     public function allProducts(Request $request)

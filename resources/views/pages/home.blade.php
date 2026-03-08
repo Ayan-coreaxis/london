@@ -167,6 +167,18 @@
         </h2>
     </div>
     <div class="delivery-cards" data-aos="fade-left" data-aos-duration="700">
+        @if(isset($deliveryMethods) && $deliveryMethods->count() > 0)
+            @php $dcClasses = ['dc-standard','dc-nextday','dc-sameday','dc-highlands']; $dcIcons = ['fa-truck-fast','fa-calendar-days','fa-bolt','fa-mountain']; @endphp
+            @foreach($deliveryMethods->take(4) as $di => $dm)
+            @php $isLight = $di % 2 === 0; @endphp
+            <a href="{{ route('checkout') }}" class="delivery-card {{ $dcClasses[$di % 4] }}">
+                <div class="dc-icon"><i class="fa-solid {{ $dcIcons[$di % 4] }}" style="{{ $isLight ? '' : 'color:white;' }}"></i></div>
+                <div class="dc-title" style="{{ $isLight ? '' : 'color:white;' }}">{{ $dm->name }}</div>
+                <div class="dc-sub" style="font-size:11px;margin-top:3px;{{ $isLight ? 'color:#555;' : 'color:rgba(255,255,255,0.8);' }}">{{ $dm->price > 0 ? '£'.number_format($dm->price,2) : 'FREE' }}</div>
+                <div class="dc-link" style="{{ $isLight ? '' : 'color:white;' }}">Find Out more ›</div>
+            </a>
+            @endforeach
+        @else
         <a href="#" class="delivery-card dc-standard">
             <div class="dc-icon"><i class="fa-solid fa-truck-fast" style="color:white;"></i></div>
             <div class="dc-title">Standard</div>
@@ -177,6 +189,7 @@
             <div class="dc-title" style="color:white;">Next Day</div>
             <div class="dc-link" style="color:white;">Find Out more ›</div>
         </a>
+        @endif
     </div>
 </section>
 

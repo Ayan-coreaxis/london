@@ -19,7 +19,7 @@ class CartController extends Controller
         foreach ($cart as $key => $item) {
             $price = (float)($item['price'] ?? 0);
             $qty = (int)($item['quantity'] ?? 1);
-            $lineTotal = $price * $qty;
+            $lineTotal = ($item['price_is_total'] ?? false) ? $price : $price * $qty;
             $subtotal += $lineTotal;
             $items[] = array_merge($item, ['cart_key' => $key, 'line_total' => $lineTotal]);
         }
@@ -56,13 +56,14 @@ class CartController extends Controller
         }
 
         // Variation pricing verification
+        $priceIsTotal = false;
         if ($request->has('variation_price') && $request->variation_price > 0) {
             $vp = (float)$request->variation_price;
             $verify = DB::selectOne(
                 "SELECT price FROM product_variation_pricing WHERE variation_id IN (SELECT id FROM product_variations WHERE product_id=?) AND price=? LIMIT 1",
                 [$product->id, $vp]
             );
-            if ($verify) $price = $vp;
+            if ($verify) { $price = $vp; $priceIsTotal = true; }
         }
 
         // Turnaround pricing verification
@@ -72,7 +73,7 @@ class CartController extends Controller
                 "SELECT price FROM product_pricing WHERE turnaround_id IN (SELECT id FROM product_turnarounds WHERE product_id=?) AND price=? LIMIT 1",
                 [$product->id, $tp]
             );
-            if ($verify) $price = $tp;
+            if ($verify) { $price = $tp; $priceIsTotal = true; }
         }
 
         $optionsStr = http_build_query($rawOptions);
@@ -117,6 +118,7 @@ class CartController extends Controller
                 'product_slug' => $product->slug, 'image' => $product->image1,
                 'quantity' => (int)$request->quantity, 'price' => $price,
                 'options' => $rawOptions, 'artwork_url' => $artworkUrl,
+                'price_is_total' => $priceIsTotal,
             ];
         }
         session(['cart' => $cart]);
@@ -195,7 +197,7 @@ class CartController extends Controller
         foreach ($cart as $key => $item) {
             $price = (float)($item['price'] ?? 0);
             $qty = (int)($item['quantity'] ?? 1);
-            $lineTotal = $price * $qty;
+            $lineTotal = ($item['price_is_total'] ?? false) ? $price : $price * $qty;
             $subtotal += $lineTotal;
             $items[] = array_merge($item, ['cart_key' => $key, 'line_total' => $lineTotal]);
         }
@@ -260,7 +262,7 @@ class CartController extends Controller
         foreach ($cart as $item) {
             $price = (float)($item['price'] ?? 0);
             $qty = (int)($item['quantity'] ?? 1);
-            $lineTotal = $price * $qty;
+            $lineTotal = ($item['price_is_total'] ?? false) ? $price : $price * $qty;
             $subtotal += $lineTotal;
             $itemsForDB[] = [
                 'product_id' => $item['product_id'] ?? null, 'product_name' => $item['product_name'],
