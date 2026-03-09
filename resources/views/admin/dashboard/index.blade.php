@@ -96,7 +96,7 @@
             <div style="font-size:13px;font-weight:600">{{ $order->first_name }} {{ $order->last_name }}</div>
             <div style="font-size:11px;color:#aaa">{{ $order->email }}</div>
           </td>
-          <td style="color:#888;font-size:12px">—</td>
+          <td style="color:#888;font-size:12px">{{ $order->item_count > 0 ? $order->item_count.' '.($order->item_count == 1 ? 'item' : 'items') : '—' }}</td>
           <td><strong>£{{ number_format($order->total,2) }}</strong></td>
           <td><span class="badge badge-{{ $order->status }}">{{ ucfirst(str_replace('_',' ',$order->status)) }}</span></td>
           <td style="font-size:12px;color:#aaa">{{ date('d M',strtotime($order->created_at)) }}</td>

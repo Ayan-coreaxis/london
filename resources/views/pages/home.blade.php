@@ -158,6 +158,74 @@
     </section>
 </div>
 
+{{-- ===== FREE ARTWORK CHECK BANNER ===== --}}
+<section class="artwork-cta-section" data-aos="fade-up" data-aos-duration="700">
+    <div class="artwork-cta-inner">
+        <div class="artwork-cta-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <polyline points="9 15 11 17 15 13"/>
+            </svg>
+        </div>
+        <div class="artwork-cta-text">
+            <h3>Free 30-Point Artwork Check</h3>
+            <p>Every order includes a thorough check of your artwork — resolution, bleed, colours and more. We'll contact you if anything needs fixing before we print.</p>
+        </div>
+        <a href="{{ route('contact') }}" class="artwork-cta-btn">Learn More</a>
+    </div>
+</section>
+
+{{-- ===== WHY CHOOSE US ===== --}}
+<section class="why-us-section" data-aos="fade-up" data-aos-duration="700">
+    <h2>Why London InstantPrint?</h2>
+    <div class="why-us-grid">
+        <div class="why-us-card" data-aos="fade-up" data-aos-delay="0">
+            <div class="why-us-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <h4>Quality Guaranteed</h4>
+            <p>Professional print quality on every order — or we reprint for free.</p>
+        </div>
+        <div class="why-us-card" data-aos="fade-up" data-aos-delay="80">
+            <div class="why-us-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <h4>Fast Turnaround</h4>
+            <p>Order by 5pm for next-day dispatch. Same-day options available on selected products.</p>
+        </div>
+        <div class="why-us-card" data-aos="fade-up" data-aos-delay="160">
+            <div class="why-us-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="3" width="15" height="13" rx="1"/>
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                    <circle cx="5.5" cy="18.5" r="2.5"/>
+                    <circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+            </div>
+            <h4>Free UK Delivery</h4>
+            <p>Free next-day delivery on all orders. No minimum order value required.</p>
+        </div>
+        <div class="why-us-card" data-aos="fade-up" data-aos-delay="240">
+            <div class="why-us-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <h4>Dedicated Support</h4>
+            <p>Personal account managers to help you every step of the way.</p>
+        </div>
+    </div>
+</section>
+
 {{-- ===== DELIVERY ===== --}}
 <section class="delivery-section">
     <div class="delivery-title" data-aos="fade-right" data-aos-duration="700">

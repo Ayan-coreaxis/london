@@ -18,7 +18,7 @@ class DashboardController extends Controller
             $monthVisitors = DB::selectOne("SELECT COUNT(DISTINCT ip_address) as c FROM visitors WHERE MONTH(visited_date)=MONTH(NOW()) AND YEAR(visited_date)=YEAR(NOW())")->c ?? 0;
         } catch (\Exception $e) {}
 
-        $recentOrders   = DB::select("SELECT * FROM orders ORDER BY created_at DESC LIMIT 10");
+        $recentOrders   = DB::select("SELECT o.*, COALESCE(oi.item_count,0) as item_count FROM orders o LEFT JOIN (SELECT order_id, COUNT(*) as item_count FROM order_items GROUP BY order_id) oi ON oi.order_id = o.id ORDER BY o.created_at DESC LIMIT 10");
         $ordersByStatus = DB::select("SELECT status, COUNT(*) as count FROM orders GROUP BY status");
 
         $revenueChart = [];

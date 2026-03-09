@@ -20,7 +20,9 @@ class PaymentController extends Controller
         // Calculate totals server-side (NEVER trust client)
         $subtotal = 0;
         foreach ($cart as $item) {
-            $subtotal += (float)($item['price'] ?? 0) * (int)($item['quantity'] ?? 1);
+            $price = (float)($item['price'] ?? 0);
+            $qty   = (int)($item['quantity'] ?? 1);
+            $subtotal += ($item['price_is_total'] ?? false) ? $price : $price * $qty;
         }
 
         $deliveryMethod = $request->input('delivery_method', 'next_day_free');
@@ -89,7 +91,9 @@ class PaymentController extends Controller
 
         $subtotal = 0;
         foreach ($cart as $item) {
-            $subtotal += (float)($item['price'] ?? 0) * (int)($item['quantity'] ?? 1);
+            $price = (float)($item['price'] ?? 0);
+            $qty   = (int)($item['quantity'] ?? 1);
+            $subtotal += ($item['price_is_total'] ?? false) ? $price : $price * $qty;
         }
 
         $deliveryMethod = $request->input('delivery_method', 'next_day_free');
@@ -257,7 +261,9 @@ class PaymentController extends Controller
         $cart = session('cart', []);
         $subtotal = 0;
         foreach ($cart as $item) {
-            $subtotal += (float)($item['price'] ?? 0) * (int)($item['quantity'] ?? 1);
+            $price = (float)($item['price'] ?? 0);
+            $qty   = (int)($item['quantity'] ?? 1);
+            $subtotal += ($item['price_is_total'] ?? false) ? $price : $price * $qty;
         }
 
         if ($subtotal < $promo->min_order_amount) {
