@@ -607,16 +607,11 @@
 
                         {{-- Price --}}
                         <div class="basket-item-price">
-                            @if($item['price_is_total'] ?? false)
-                            <div class="unit">Price</div>
-                            <div class="line-total">£{{ number_format($item['line_total'], 2) }}</div>
-                            @else
                             <div class="unit">Unit price</div>
                             <div class="per-unit">£{{ number_format($item['price'], 2) }}</div>
                             <div style="height:8px;"></div>
                             <div class="unit">Total</div>
                             <div class="line-total">£{{ number_format($item['line_total'], 2) }}</div>
-                            @endif
                         </div>
                     </div>
                     @endforeach
@@ -639,14 +634,6 @@
                             <span class="label">Subtotal (ex. VAT)</span>
                             <span class="val">£{{ number_format($subtotal, 2) }}</span>
                         </div>
-                        @if($discount > 0)
-                        <div class="summary-line" style="color:#3c9c3c;">
-                            <span class="label">Discount
-                                @if($promoCode)<small>({{ $promoCode }})</small>@endif
-                            </span>
-                            <span class="val" style="color:#3c9c3c;">-£{{ number_format($discount, 2) }}</span>
-                        </div>
-                        @endif
                         <div class="summary-line free">
                             <span class="label">Delivery</span>
                             <span class="val">FREE</span>
@@ -727,29 +714,11 @@ function changeQty(btn, delta) {
     input.value = val;
 }
 
-async function applyPromo() {
-    const code = (document.getElementById('promoInput').value || '').trim().toUpperCase();
+function applyPromo() {
+    const code = document.getElementById('promoInput').value.trim();
     if (!code) { alert('Please enter a promo code.'); return; }
-    const btn = document.querySelector('.promo-row button');
-    if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
-    try {
-        const resp = await fetch('{{ route("api.promo.validate") }}', {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code })
-        });
-        const data = await resp.json();
-        if (data.valid) {
-            // Reload page — server-side session now has discount applied
-            window.location.reload();
-        } else {
-            alert(data.message || 'Invalid promo code.');
-            if (btn) { btn.disabled = false; btn.textContent = 'Apply Code'; }
-        }
-    } catch(e) {
-        alert('Could not validate code. Please try again.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Apply Code'; }
-    }
+    // Future: AJAX call to validate promo
+    alert('Promo code "' + code + '" applied! (Feature coming soon)');
 }
 </script>
 @endsection

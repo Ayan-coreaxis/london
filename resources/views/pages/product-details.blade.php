@@ -818,14 +818,7 @@ function toggleFaq(el, i) {
     document.querySelectorAll('.faq-item').forEach(x => x.classList.remove('active'));
     el.classList.add('active');
     var f = faqData[i] || {};
-    var panel = document.getElementById('faqAnswer');
-    var h4 = document.createElement('h4');
-    h4.textContent = f.q || '';
-    var body = document.createElement('p');
-    body.textContent = f.a || '';
-    panel.innerHTML = '';
-    panel.appendChild(h4);
-    panel.appendChild(body);
+    document.getElementById('faqAnswer').innerHTML = '<h4>' + (f.q || '') + '</h4>' + (f.a || '');
 }
 
 // Toggle buttons
