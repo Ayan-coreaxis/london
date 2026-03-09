@@ -488,12 +488,12 @@
                                 <span class="payment-opt-label">{{ $pm->name }}</span>
                                 @if($pm->provider === 'stripe')
                                 <div class="payment-logos">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/40px-Mastercard-logo.svg.png" alt="MC" height="18">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/60px-Visa_Inc._logo.svg.png" alt="Visa" height="18">
+                                    <span style="display:inline-flex;align-items:center;background:#eb001b;color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:3px;letter-spacing:.5px;height:18px">MC</span>
+                                    <span style="display:inline-flex;align-items:center;background:#1a1f71;color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:1px;height:18px">VISA</span>
                                 </div>
                                 @elseif($pm->provider === 'paypal')
                                 <div class="payment-logos">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/80px-PayPal.svg.png" alt="PayPal" height="20">
+                                    <span style="display:inline-flex;align-items:center;background:#003087;color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:3px;letter-spacing:.5px;height:18px">Pay<span style="color:#009cde">Pal</span></span>
                                 </div>
                                 @endif
                             </label>
@@ -501,8 +501,14 @@
                             @if($pm->provider === 'stripe')
                             {{-- Real Stripe Card Element --}}
                             <div class="card-fields {{ $isFirst ? 'show' : '' }}" id="stripeCardFields" style="padding:16px;">
+                                @if(!empty($stripePublicKey))
                                 <div id="stripe-card-element" style="padding:10px;border:1.5px solid #ddd;border-radius:7px;background:#fafafa;"></div>
                                 <div id="stripe-errors" style="color:#e8352a;font-size:12px;margin-top:6px;"></div>
+                                @else
+                                <div style="padding:12px;border:1.5px solid #ffc107;border-radius:7px;background:#fffbea;color:#856404;font-size:13px;">
+                                    <i class="fas fa-exclamation-triangle"></i> Stripe is not configured yet. Please contact support.
+                                </div>
+                                @endif
                             </div>
                             @elseif($pm->provider === 'paypal')
                             {{-- PayPal Buttons --}}
@@ -528,8 +534,14 @@
                                 <span class="payment-opt-label">Credit / Debit Card</span>
                             </label>
                             <div class="card-fields show" id="stripeCardFields" style="padding:16px;">
+                                @if(!empty($stripePublicKey))
                                 <div id="stripe-card-element" style="padding:10px;border:1.5px solid #ddd;border-radius:7px;background:#fafafa;"></div>
                                 <div id="stripe-errors" style="color:#e8352a;font-size:12px;margin-top:6px;"></div>
+                                @else
+                                <div style="padding:12px;border:1.5px solid #ffc107;border-radius:7px;background:#fffbea;color:#856404;font-size:13px;">
+                                    <i class="fas fa-exclamation-triangle"></i> Stripe is not configured yet. Please contact support.
+                                </div>
+                                @endif
                             </div>
                             @endforelse
                         </div>
