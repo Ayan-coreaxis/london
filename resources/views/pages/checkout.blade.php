@@ -803,6 +803,8 @@ function selectDelivery(label, cost) {
     updateCheckoutTotals();
 }
 
+var paypalConfigured = {{ !empty($paypalClientId) ? 'true' : 'false' }};
+
 // ─── PAYMENT SELECTION ────────────────────────────────
 function selectPayment(label, provider, slug) {
     document.querySelectorAll('.payment-opt').forEach(l => l.classList.remove('selected'));
@@ -812,11 +814,11 @@ function selectPayment(label, provider, slug) {
     var paypalContainer = document.getElementById('paypal-button-container');
     var bankFields = document.getElementById('bankFields');
     if (stripeFields) stripeFields.classList.toggle('show', provider === 'stripe');
-    if (paypalContainer) paypalContainer.style.display = provider === 'paypal' ? 'block' : 'none';
+    if (paypalContainer) paypalContainer.style.display = (provider === 'paypal' && paypalConfigured) ? 'block' : 'none';
     if (bankFields) bankFields.style.display = slug === 'bank_transfer' ? 'block' : 'none';
-    // Place Order button visibility
+    // Hide Place Order button only when PayPal is selected AND configured (PayPal has its own button)
     var btn = document.getElementById('placeOrderBtn');
-    if (btn) btn.style.display = provider === 'paypal' ? 'none' : 'block';
+    if (btn) btn.style.display = (provider === 'paypal' && paypalConfigured) ? 'none' : 'block';
 }
 
 // ─── TOTALS UPDATE ─────────────────────────────────────
