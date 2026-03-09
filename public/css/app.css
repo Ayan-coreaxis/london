@@ -632,6 +632,59 @@ body { font-family: var(--body); color: #222; overflow-x: hidden; }
 .dc-nextday .dc-link { color: var(--red); }
 
 /* ===========================
+   ARTWORK CTA BANNER
+   =========================== */
+.artwork-cta-section {
+  background: linear-gradient(135deg, #1e3a6e 0%, #2a5298 100%);
+  padding: 40px 60px;
+}
+.artwork-cta-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; gap: 28px;
+}
+.artwork-cta-icon { color: #fff; opacity: 0.85; flex-shrink: 0; }
+.artwork-cta-text { flex: 1; }
+.artwork-cta-text h3 { font-family: var(--font); font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.artwork-cta-text p { font-family: var(--body); font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.6; margin: 0; }
+.artwork-cta-btn {
+  flex-shrink: 0;
+  background: #fff; color: #1e3a6e;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  padding: 11px 24px; border-radius: 8px;
+  text-decoration: none; white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+.artwork-cta-btn:hover { background: #f0f4ff; }
+
+/* ===========================
+   WHY CHOOSE US
+   =========================== */
+.why-us-section {
+  padding: 70px 60px; background: #fff; text-align: center;
+}
+.why-us-section h2 {
+  font-family: var(--font); font-size: 32px; font-weight: 900; color: var(--navy);
+  margin-bottom: 40px;
+}
+.why-us-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px;
+  max-width: 1100px; margin: 0 auto;
+}
+.why-us-card {
+  background: #f8f9fc; border-radius: 14px; padding: 32px 24px; text-align: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.why-us-card:hover { box-shadow: 0 8px 28px rgba(30,58,110,0.12); transform: translateY(-3px); }
+.why-us-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a6e, #2a5298);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px; color: #fff;
+}
+.why-us-card h4 { font-family: var(--font); font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 10px; }
+.why-us-card p { font-family: var(--body); font-size: 13px; color: #666; line-height: 1.6; margin: 0; }
+
+/* ===========================
    TRENDING
    =========================== */
 .trending-section {
@@ -726,6 +779,10 @@ footer { background: #113F70; color: #ffffff; padding: 48px 60px 28px; }
   .sample-section { width: 80%; }
 }
 @media (max-width: 768px) {
+  .artwork-cta-section { padding: 32px 24px; }
+  .artwork-cta-inner { flex-direction: column; text-align: center; }
+  .why-us-section { padding: 50px 24px; }
+  .why-us-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .main-nav { display: none; }
   .hero { grid-template-columns: 1fr; }
   .hero-right { min-height: 260px; }
@@ -745,6 +802,7 @@ footer { background: #113F70; color: #ffffff; padding: 48px 60px 28px; }
   .sample-section { width: 95%; }
 }
 @media (max-width: 480px) {
+  .why-us-grid { grid-template-columns: 1fr; }
   .products-grid { grid-template-columns: 1fr; }
   .blogs-grid { grid-template-columns: 1fr; }
   .header-right { gap: 10px; }
