@@ -739,7 +739,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         if (method === 'stripe_card' || method === 'stripe') {
             // ── Stripe payment ──
             if (!stripeInstance || !stripeCardElement) {
-                alert('Stripe not loaded. Please refresh and try again.');
+                alert('Card payment is not configured yet.\n\nPlease use Bank Transfer or contact admin to set up Stripe API keys.');
                 resetBtn(btn); return;
             }
             // Create PaymentIntent server-side

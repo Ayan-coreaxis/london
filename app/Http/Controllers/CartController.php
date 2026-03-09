@@ -216,20 +216,23 @@ class CartController extends Controller
         $deliveryMethods = collect([]);
         try { $deliveryMethods = DB::table('delivery_methods')->where('is_active', true)->orderBy('sort_order')->get(); } catch (\Exception $e) {}
 
-        // Stripe public key
-        $stripePublicKey = '';
+        // Stripe public key — DB first, then env fallback
+        $stripePublicKey = env('STRIPE_KEY', '');
+        $stripeSecretKey = env('STRIPE_SECRET', '');
         $stripeMethod = $paymentMethods->firstWhere('provider', 'stripe');
         if ($stripeMethod) {
             $config = json_decode($stripeMethod->config, true);
-            $stripePublicKey = $config['public_key'] ?? '';
+            if (!empty($config['public_key'])) $stripePublicKey = $config['public_key'];
+            if (!empty($config['secret_key'])) $stripeSecretKey = $config['secret_key'];
         }
 
-        // PayPal config
-        $paypalClientId = ''; $paypalCurrency = 'GBP';
+        // PayPal config — DB first, then env fallback
+        $paypalClientId = env('PAYPAL_CLIENT_ID', '');
+        $paypalCurrency = 'GBP';
         $paypalMethod = $paymentMethods->firstWhere('provider', 'paypal');
         if ($paypalMethod) {
             $config = json_decode($paypalMethod->config, true);
-            $paypalClientId = $config['client_id'] ?? '';
+            if (!empty($config['client_id'])) $paypalClientId = $config['client_id'];
             $paypalCurrency = $config['currency'] ?? 'GBP';
         }
 
@@ -297,17 +300,18 @@ class CartController extends Controller
         // Verify payments
         if ($paymentMethod === 'stripe_card' && $stripePI) {
             try {
+                $secret = env('STRIPE_SECRET', '');
                 $method = DB::table('payment_methods')->where('slug', 'stripe_card')->first();
                 if ($method) {
                     $config = json_decode($method->config, true);
-                    $secret = $config['secret_key'] ?? '';
-                    if ($secret) {
-                        $ch = curl_init("https://api.stripe.com/v1/payment_intents/{$stripePI}");
-                        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_USERPWD => $secret . ':']);
-                        $resp = json_decode(curl_exec($ch), true);
-                        curl_close($ch);
-                        if (($resp['status'] ?? '') === 'succeeded') $paymentStatus = 'paid';
-                    }
+                    if (!empty($config['secret_key'])) $secret = $config['secret_key'];
+                }
+                if ($secret) {
+                    $ch = curl_init("https://api.stripe.com/v1/payment_intents/{$stripePI}");
+                    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_USERPWD => $secret . ':']);
+                    $resp = json_decode(curl_exec($ch), true);
+                    curl_close($ch);
+                    if (($resp['status'] ?? '') === 'succeeded') $paymentStatus = 'paid';
                 }
             } catch (\Exception $e) { Log::error('Stripe verify: ' . $e->getMessage()); }
         } elseif ($paymentMethod === 'paypal' && session('paypal_captured')) {
